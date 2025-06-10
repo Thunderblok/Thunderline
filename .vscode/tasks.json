@@ -1,0 +1,95 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Setup Thunderline",
+			"type": "shell",
+			"command": "mix deps.get && mix ecto.setup",
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": [],
+			"detail": "Install dependencies and setup database"
+		},
+		{
+			"label": "Start Thunderline Server",
+			"type": "shell",
+			"command": "mix phx.server",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [],
+			"detail": "Start Phoenix server with live reload"
+		},
+		{
+			"label": "Run Tests",
+			"type": "shell",
+			"command": "mix test",
+			"group": "test",
+			"isBackground": false,
+			"problemMatcher": ["$mixTestFailure"],
+			"detail": "Run all tests"
+		},
+		{
+			"label": "Run Tests (Watch)",
+			"type": "shell",
+			"command": "mix test.watch",
+			"group": "test",
+			"isBackground": true,
+			"problemMatcher": ["$mixTestFailure"],
+			"detail": "Run tests in watch mode"
+		},
+		{
+			"label": "Database Reset",
+			"type": "shell",
+			"command": "mix ecto.reset",
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": [],
+			"detail": "Drop, create, and migrate database"
+		},
+		{
+			"label": "Format Code",
+			"type": "shell",
+			"command": "mix format",
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": [],
+			"detail": "Format Elixir code"
+		},
+		{
+			"label": "Code Quality Check",
+			"type": "shell",
+			"command": "mix credo",
+			"group": "test",
+			"isBackground": false,
+			"problemMatcher": [],
+			"detail": "Run static code analysis with Credo"
+		},
+		{
+			"label": "Interactive Shell",
+			"type": "shell",
+			"command": "iex -S mix",
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": [],
+			"detail": "Start interactive Elixir shell with project"
+		},
+		{
+			"label": "Generate Documentation",
+			"type": "shell",
+			"command": "mix docs",
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": [],
+			"detail": "Generate ExDoc documentation"
+		},
+		{
+			"label": "Build Release",
+			"type": "shell",
+			"command": "mix release",
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": [],
+			"detail": "Build production release"
+		}
+	]
+}
