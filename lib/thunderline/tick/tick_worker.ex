@@ -26,15 +26,17 @@ defmodule Thunderline.Tick.TickWorker do
   alias Thunderline.PAC.{Agent, Zone, Manager}
   alias Thunderline.Tick.{Pipeline, Log}
   alias Thunderline.Memory.Manager, as: MemoryManager
-
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"agent_id" => agent_id} = args}) do
+  def perform(%Oban.Job{args: %{"agent_id" => agent_id} = args} = job) do
     Logger.debug("Starting tick for PAC Agent #{agent_id}")
+
+    # Extract Broadway metadata if available
+    broadway_metadata = extract_broadway_metadata(job)
 
     with {:ok, agent} <- load_agent(agent_id),
          {:ok, context} <- build_tick_context(agent, args),
          {:ok, result} <- Pipeline.execute_tick(agent, context),
-         {:ok, _log} <- Log.create_tick_log(agent, result) do
+         {:ok, _log} <- Log.create_tick_log(agent, result, broadway_metadata) do
 
       # Notify orchestrator of completion
       notify_tick_completion(agent_id, result)
@@ -159,6 +161,19 @@ defmodule Thunderline.Tick.TickWorker do
         tool_access: current_tools ++ tool_access
       }
     end)
+  end
+
+  defp extract_broadway_metadata(job) do
+    %{
+      job_id: job.id,
+      queue: job.queue,
+      worker: job.worker,
+      attempt: job.attempt,
+      max_attempts: job.max_attempts,
+      scheduled_at: job.scheduled_at,
+      attempted_at: job.attempted_at,
+      inserted_at: job.inserted_at
+    }
   end
 
   defp notify_tick_completion(agent_id, result) do

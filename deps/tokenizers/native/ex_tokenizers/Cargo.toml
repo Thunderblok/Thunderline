@@ -1,0 +1,17 @@
+[package]
+name = "ex_tokenizers"
+version = "0.1.0"
+authors = []
+edition = "2021"
+
+[lib]
+name = "ex_tokenizers"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+anyhow = "1"
+rustler = "0.34.0"
+thiserror = "1"
+tokenizers = { version = "0.20.0", default-features = false, features = ["onig", "esaxx_fast"]}
+serde = { version = "1.0", features = [ "rc", "derive" ] }
