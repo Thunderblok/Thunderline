@@ -27,11 +27,8 @@ defmodule Thunderline.AgentCore.DecisionEngine do
   def make_decision(assessment, agent_config, reasoning_mode \\ :balanced) do
     with {:ok, options} <- generate_options(assessment, agent_config),
          {:ok, priorities} <- establish_priorities(assessment, agent_config, reasoning_mode),
-         {:ok, decision} <- evaluate_and_choose(options, priorities, assessment, agent_config) do
-      # generate_reasoning is currently simple as AI provides it.
-      # If more complex internal reasoning generation is needed, it can be expanded.
-      {:ok, reasoning_text} <- generate_reasoning(decision, assessment, options)
-
+         {:ok, decision} <- evaluate_and_choose(options, priorities, assessment, agent_config),
+         {:ok, reasoning_text} <- generate_reasoning(decision, assessment, options) do
       final_decision = Map.put_if_absent(decision, :reasoning, reasoning_text)
       metadata = %{
         timestamp: DateTime.utc_now(),
@@ -45,7 +42,7 @@ defmodule Thunderline.AgentCore.DecisionEngine do
         Logger.error("Decision engine failed: #{inspect(reason)}")
         {:error, reason}
       err ->
-         Logger.error("Decision engine unexpected error: #{inspect(err)}")
+        Logger.error("Decision engine unexpected error: #{inspect(err)}")
         {:error, :unexpected_decision_engine_error}
     end
   end

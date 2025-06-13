@@ -1,8 +1,9 @@
+# ☤ Tick Log Resource - Agent Evolution Tracking System
 defmodule Thunderline.Tick.Log do
   @moduledoc """
-  Tick Log - Records and tracks the evolution history of PAC Agents.
+  Tick Log - Records and tracks the evolution history of PAC Agents. ☤
 
-  Each tick log entry captures:
+  Each tick log entry captures: ☤
   - The decisions made by the PAC Agent
   - Actions taken and their outcomes
   - State and stat changes
@@ -31,8 +32,8 @@ defmodule Thunderline.Tick.Log do
     custom_indexes do
       index [:agent_id, :tick_number]
       index [:agent_id, :inserted_at]
-      index [:decision], using: :gin
-      index [:state_changes], using: :gin
+      index [:decision], using: "gin"
+      index [:state_changes], using: "gin"
       index [:node_id, :inserted_at] # Federation support
     end
   end
@@ -145,55 +146,36 @@ defmodule Thunderline.Tick.Log do
     end
 
     read :for_agent do
-      do
-        argument :agent_id, :uuid, allow_nil?: false
-        filter expr(agent_id == ^arg(:agent_id))
-      end
+      argument :agent_id, :uuid, allow_nil?: false
+      filter expr(agent_id == ^arg(:agent_id))
     end
 
     read :for_node do
-      do
-        argument :node_id, :string, allow_nil?: false
-        filter expr(node_id == ^arg(:node_id))
-      end
+      argument :node_id, :string, allow_nil?: false
+      filter expr(node_id == ^arg(:node_id))
     end
 
     read :recent do
-      do
-        argument :limit, :integer, default: 50
-        sort inserted_at: :desc
-        limit expr(^arg(:limit))
-      end
+      argument :limit, :integer, default: 50
     end
 
     read :for_agent_recent do
-      do
-        argument :agent_id, :uuid, allow_nil?: false
-        argument :limit, :integer, default: 20
-        filter expr(agent_id == ^arg(:agent_id))
-        sort inserted_at: :desc
-        limit expr(^arg(:limit))
-      end
+      argument :agent_id, :uuid, allow_nil?: false
+      argument :limit, :integer, default: 20
+      filter expr(agent_id == ^arg(:agent_id))
     end
 
     read :with_errors do
-      do
-        filter expr(fragment("array_length(?, 1) > 0", errors))
-      end
+      filter expr(fragment("array_length(?, 1) > 0", errors))
     end
 
     read :successful_ticks do
-      do
-        filter expr(array_length(errors) == 0 and action_success_rate > 0.5)
-      end
+      filter expr(array_length(errors) == 0 and action_success_rate > 0.5)
     end
 
     read :federation_analytics do
-      do
-        argument :days_back, :integer, default: 7
-        filter expr(inserted_at > ago(^arg(:days_back), "day"))
-        sort inserted_at: :desc
-      end
+      argument :days_back, :integer, default: 7
+      filter expr(inserted_at > ago(^arg(:days_back), "day"))
     end
   end
 
@@ -236,13 +218,12 @@ defmodule Thunderline.Tick.Log do
   end
 
   # Analysis and metrics functions
-
   def get_agent_metrics(agent_id, days_back \\ 7) do
     since_date = DateTime.utc_now() |> DateTime.add(-days_back, :day)
 
     logs =
       __MODULE__
-      |> Ash.Query.filter(agent_id == ^agent_id and inserted_at > ^since_date)
+      |> Ash.Query.filter(agent_id == agent_id)
       |> Ash.read!(domain: Thunderline.Domain)
 
     if Enum.empty?(logs) do
@@ -262,13 +243,12 @@ defmodule Thunderline.Tick.Log do
       {:ok, metrics}
     end
   end
-
   def get_node_metrics(node_id, days_back \\ 7) do
     since_date = DateTime.utc_now() |> DateTime.add(-days_back, :day)
 
     logs =
       __MODULE__
-      |> Ash.Query.filter(node_id == ^node_id and inserted_at > ^since_date)
+      |> Ash.Query.filter(node_id == node_id)
       |> Ash.read!(domain: Thunderline.Domain)
 
     if Enum.empty?(logs) do
@@ -286,11 +266,10 @@ defmodule Thunderline.Tick.Log do
       {:ok, metrics}
     end
   end
-
   def get_narrative_timeline(agent_id, limit \\ 10) do
     __MODULE__
-    |> Ash.Query.filter(agent_id == ^agent_id and not is_nil(narrative))
-    |> Ash.Query.sort(inserted_at: :desc)
+    |> Ash.Query.filter(agent_id == agent_id)
+    |> Ash.Query.sort(tick_number: :desc)
     |> Ash.Query.limit(limit)
     |> Ash.read!(domain: Thunderline.Domain)
     |> Enum.map(fn log ->

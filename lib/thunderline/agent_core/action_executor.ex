@@ -119,22 +119,22 @@ defmodule Thunderline.AgentCore.ActionExecutor do
       action == "create" -> ["creative_tools"]
       action == "learn" -> ["learning_tools"]
       action == "socialize" -> ["communication"]
-      _ -> []
+      true -> []
     end
   end
   defp determine_required_tools(_), do: []
 
   defp estimate_duration(action) when is_binary(action) do
     # Duration in arbitrary "ticks" or time units
-    case action do
-      "rest" -> 1
-      "reflect" -> 2
-      "socialize" -> 3
-      "explore" -> 4
-      "create" -> 5
-      "learn" -> 4
-      s when String.starts_with?(s, "work_on_goal") -> 6
-      _ -> 3
+    cond do
+      action == "rest" -> 1
+      action == "reflect" -> 2
+      action == "socialize" -> 3
+      action == "explore" -> 4
+      action == "create" -> 5
+      action == "learn" -> 4
+      String.starts_with?(action, "work_on_goal") -> 6
+      true -> 3
     end
   end
   defp estimate_duration(_), do: 3
@@ -193,7 +193,7 @@ defmodule Thunderline.AgentCore.ActionExecutor do
       :goal_pursuit -> execute_goal_action(plan, pac_config)
       :general -> execute_general_action(plan, pac_config)
       _ ->
-        Logger.warn("Unknown action type: #{plan.type} for action #{plan.action}")
+        Logger.warning("Unknown action type: #{plan.type} for action #{plan.action}")
         {:error, {:unknown_action_type, plan.type}}
     end
   end
@@ -230,7 +230,7 @@ defmodule Thunderline.AgentCore.ActionExecutor do
           {:error, {:tool_execution_failed, tool_name, reason}}
       end
     else
-      Logger.warn("Tool #{tool_name} not available for #{pac_config.pac_name}. Available: #{inspect available_tools}")
+      Logger.warning("Tool #{tool_name} not available for #{pac_config.pac_name}. Available: #{inspect available_tools}")
       {:error, {:tool_not_available, tool_name}}
     end
   end
@@ -268,7 +268,7 @@ defmodule Thunderline.AgentCore.ActionExecutor do
 
   defp execute_creative_action(plan, pac_config) do
     case plan.action do
-      "create" | "build" | "write" -> # Group similar creative actions
+      action when action in ["create", "build", "write"] -> # Group similar creative actions
         creation = generate_creative_output(pac_config)
         {:ok, %{type: :creation, action: plan.action, energy_cost: 20, creativity_satisfaction: 25, mood_effect: "fulfilled", description: "#{pac_config.pac_name} engaged in creative work: #{plan.action}", creation: creation}}
       _ -> {:error, {:unknown_creative_action, plan.action}}
@@ -276,8 +276,8 @@ defmodule Thunderline.AgentCore.ActionExecutor do
   end
 
   defp execute_intellectual_action(plan, pac_config) do
-     case plan.action do
-      "learn" | "study" | "analyze" -> # Group similar intellectual actions
+    case plan.action do
+      action when action in ["learn", "study", "analyze"] -> # Group similar intellectual actions
         learning = generate_learning_outcome(pac_config)
         {:ok, %{type: :learning, action: plan.action, energy_cost: 15, intelligence_gain: 10, mood_effect: "satisfied", description: "#{pac_config.pac_name} engaged in learning: #{plan.action}", learning: learning}}
       _ -> {:error, {:unknown_intellectual_action, plan.action}}

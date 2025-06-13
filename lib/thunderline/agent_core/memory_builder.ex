@@ -66,7 +66,8 @@ defmodule Thunderline.AgentCore.MemoryBuilder do
     end
 
     # Extract discovery memories
-    candidates = if discoveries = action_result[:discoveries], is_list(discoveries) do
+    discoveries = action_result[:discoveries]
+    candidates = if is_list(discoveries) do
       discovery_memories = Enum.map(discoveries, &create_discovery_memory(&1, context))
       discovery_memories ++ candidates
     else
@@ -275,7 +276,7 @@ defmodule Thunderline.AgentCore.MemoryBuilder do
       {:discovery, "exploratory"} -> 1.3
       _ -> 1.0
     end
-    updated_importance =記憶體min(1.0, (memory.importance || 0.5) * multiplier) # Ensure importance exists
+    updated_importance = min(1.0, (memory.importance || 0.5) * multiplier) # Ensure importance exists
     Map.put(memory, :importance, updated_importance)
   end
   defp adjust_importance_for_personality(memory, _), do: memory # No personality map
@@ -322,10 +323,10 @@ defmodule Thunderline.AgentCore.MemoryBuilder do
         if String.trim(embedding_text) != "" do
           case VectorSearch.add_embedding(pac_id, stored_memory_struct.id, embedding_text) do
             {:ok, _embedding_result} -> :ok
-            {:error, reason} -> Logger.warn("MemoryBuilder: Failed to generate/store embedding for memory #{stored_memory_struct.id}: #{inspect(reason)}")
+            {:error, reason} -> Logger.warning("MemoryBuilder: Failed to generate/store embedding for memory #{stored_memory_struct.id}: #{inspect(reason)}")
           end
         else
-          Logger.warn("MemoryBuilder: Embedding text is empty for memory #{stored_memory_struct.id}. Skipping embedding.")
+          Logger.warning("MemoryBuilder: Embedding text is empty for memory #{stored_memory_struct.id}. Skipping embedding.")
         end
         {:ok, stored_memory_struct}
 

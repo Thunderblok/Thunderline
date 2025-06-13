@@ -1,6 +1,7 @@
+# ☤ PAC Agent - Jido AI Agent System
 defmodule Thunderline.Agents.PACAgent do
   @moduledoc """
-  Jido AI Agent wrapper for Personal Autonomous Creations (PAC Agents).
+  Jido AI Agent wrapper for Personal Autonomous Creations (PAC Agents). ☤
 
   This module implements the core AI reasoning layer for PAC Agents, integrating:
   - Jido Agent framework for autonomous behavior
@@ -27,7 +28,6 @@ defmodule Thunderline.Agents.PACAgent do
     ]
 
   require Logger
-
   alias Thunderline.PAC.{Agent, Zone, Manager}
   alias Thunderline.MCP.{Server, ToolRegistry}
   alias Thunderline.Memory.Manager, as: MemoryManager
@@ -220,7 +220,7 @@ defmodule Thunderline.Agents.PACAgent do
       }}
     else
       {:error, reason} ->
-        Logger.warn("Reasoning cycle failed: #{inspect(reason)}")
+        Logger.warning("Reasoning cycle failed: #{inspect(reason)}")
         # Return fallback decision
         {:ok, create_fallback_decision(context)}
     end

@@ -45,7 +45,7 @@ defmodule Thunderline.Tick.TickWorker do
       :ok
     else
       {:error, :agent_not_found} ->
-        Logger.warn("PAC Agent #{agent_id} not found, skipping tick")
+        Logger.warning("PAC Agent #{agent_id} not found, skipping tick")
         :ok
 
       {:error, :agent_inactive} ->
