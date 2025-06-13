@@ -1,0 +1,6 @@
+{
+  // VS Code ElixirLS configuration
+  "elixirLS.projectDir": "${workspaceFolder}",
+  "elixirLS.dialyzerEnabled": false,
+  "elixirLS.fetchDeps": false
+}
