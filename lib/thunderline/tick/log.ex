@@ -142,40 +142,58 @@ defmodule Thunderline.Tick.Log do
         :zone_context, :social_context, :memories_formed, :narrative,
         :ai_response_time_ms, :pipeline_stage_times, :errors, :broadway_metadata
       ]
-    end    read :for_agent do
-      argument :agent_id, :uuid, allow_nil?: false
-      filter expr(agent_id == ^arg(:agent_id))
+    end
+
+    read :for_agent do
+      do
+        argument :agent_id, :uuid, allow_nil?: false
+        filter expr(agent_id == ^arg(:agent_id))
+      end
     end
 
     read :for_node do
-      argument :node_id, :string, allow_nil?: false
-      filter expr(node_id == ^arg(:node_id))
+      do
+        argument :node_id, :string, allow_nil?: false
+        filter expr(node_id == ^arg(:node_id))
+      end
     end
 
     read :recent do
-      argument :limit, :integer, default: 50
-      sort inserted_at: :desc
-      limit expr(^arg(:limit))
+      do
+        argument :limit, :integer, default: 50
+        sort inserted_at: :desc
+        limit expr(^arg(:limit))
+      end
     end
 
     read :for_agent_recent do
-      argument :agent_id, :uuid, allow_nil?: false
-      argument :limit, :integer, default: 20
-      filter expr(agent_id == ^arg(:agent_id))
-      sort inserted_at: :desc
-      limit expr(^arg(:limit))
+      do
+        argument :agent_id, :uuid, allow_nil?: false
+        argument :limit, :integer, default: 20
+        filter expr(agent_id == ^arg(:agent_id))
+        sort inserted_at: :desc
+        limit expr(^arg(:limit))
+      end
     end
 
     read :with_errors do
-      filter expr(fragment("array_length(?, 1) > 0", errors))
+      do
+        filter expr(fragment("array_length(?, 1) > 0", errors))
+      end
     end
 
     read :successful_ticks do
-      filter expr(array_length(errors) == 0 and action_success_rate > 0.5)
-    end    read :federation_analytics do
-      argument :days_back, :integer, default: 7
-      filter expr(inserted_at > ago(^arg(:days_back), "day"))
-      sort inserted_at: :desc
+      do
+        filter expr(array_length(errors) == 0 and action_success_rate > 0.5)
+      end
+    end
+
+    read :federation_analytics do
+      do
+        argument :days_back, :integer, default: 7
+        filter expr(inserted_at > ago(^arg(:days_back), "day"))
+        sort inserted_at: :desc
+      end
     end
   end
 
