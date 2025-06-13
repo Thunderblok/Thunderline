@@ -1,12 +1,25 @@
 {
-  // VS Code ElixirLS configuration
-  "elixirLS.projectDir": "c:/Users/mo/Desktop/Thunderline/Thunderline",
+  // VS Code ElixirLS configuration - Fixed project directory path
+  "elixirLS.projectDir": "c:/Users/mo/Desktop/Thunderline1/Thunderline",
   "elixirLS.dialyzerEnabled": false,
   "elixirLS.fetchDeps": true,
   "elixirLS.mixEnv": "dev",
-  "elixirLS.logLevel": "debug",
+  "elixirLS.logLevel": "info",
+  "elixirLS.useCurrentRootFolderAsProjectDir": true,
+  "elixirLS.autoBuild": true,
   "files.watcherExclude": {
     "**/deps/**": true,
-    "**/_build/**": true
+    "**/_build/**": true,
+    "**/.elixir_ls/**": true
+  },
+  "files.associations": {
+    "*.exs": "elixir",
+    "*.ex": "elixir"
+  },
+  "[elixir]": {
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.wordBasedSuggestions": "off",
+    "editor.trimAutoWhitespace": true
   }
 }
