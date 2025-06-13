@@ -25,3 +25,4 @@ defmodule Thunderline.AgentCore.ContextAssessor do
     metadata = %{timestamp: DateTime.utc_now()}
     {context, metadata}
   end
+end

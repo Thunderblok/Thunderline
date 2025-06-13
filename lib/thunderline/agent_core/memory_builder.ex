@@ -13,3 +13,4 @@ defmodule Thunderline.AgentCore.MemoryBuilder do
     metadata = %{timestamp: DateTime.utc_now()}
     {:ok, memory_context, metadata}
   end
+end

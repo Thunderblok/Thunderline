@@ -18,3 +18,4 @@ defmodule Thunderline.AgentCore.DecisionEngine do
     metadata = %{timestamp: DateTime.utc_now()}
     {decision, metadata}
   end
+end

@@ -1,6 +1,6 @@
 {
   // VS Code ElixirLS configuration
-  "elixirLS.projectDir": "${workspaceFolder}",
+  "elixirLS.projectDir": "c:/Users/mo/Desktop/Thunderline/Thunderline",
   "elixirLS.dialyzerEnabled": false,
   "elixirLS.fetchDeps": true,
   "elixirLS.mixEnv": "dev",
