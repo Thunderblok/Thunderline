@@ -26,37 +26,9 @@ defmodule Thunderline.Agents.Actions.MakeDecision do
   alias Thunderline.Agents.AIProvider
 
   @impl true
-  def run(params, context) do
-    %{
-      assessment: assessment,
-      agent_config: agent_config,
-      reasoning_mode: mode
-    } = params
-
-    Logger.debug("Making decision for PAC Agent #{agent_config[:agent_name]}")
-
-    with {:ok, options} <- generate_options(assessment, agent_config),
-         {:ok, priorities} <- establish_priorities(assessment, agent_config, mode),
-         {:ok, decision} <- evaluate_and_choose(options, priorities, assessment),
-         {:ok, reasoning} <- generate_reasoning(decision, assessment, options) do
-
-      result = %{
-        chosen_action: decision.action,
-        reasoning: reasoning,
-        confidence: decision.confidence,
-        alternatives: decision.alternatives,
-        priorities: priorities,
-        timestamp: DateTime.utc_now(),
-        federation_context: Map.get(assessment, :federation_context, %{})
-      }
-
-      Logger.debug("Decision made for PAC Agent #{agent_config[:agent_name]}: #{decision.action}")
-      {:ok, result}
-    else
-      {:error, reason} ->
-        Logger.error("Decision making failed: #{inspect(reason)}")
-        {:error, reason}
-    end
+  def run(params, _ctx) do
+    %{assessment: assessment, agent_config: agent_config} = params
+    Thunderline.AgentCore.DecisionEngine.make_decision(agent_config, assessment)
   end
 
   # Decision Process Functions

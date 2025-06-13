@@ -26,48 +26,10 @@ defmodule Thunderline.Agents.Actions.ExecuteAction do
   alias Thunderline.PAC.Manager
 
   @impl true
-  def run(params, context) do
-    %{
-      decision: decision,
-      pac_config: pac_config,
-      context: action_context,
-      available_tools: tools
-    } = params
-
-    action = decision.chosen_action
-    pac_id = pac_config.pac_id
-
-    Logger.debug("Executing action '#{action}' for PAC #{pac_config.pac_name}")
-
-    with {:ok, action_plan} <- create_action_plan(action, decision, action_context),
-         {:ok, execution_result} <- execute_action_plan(action_plan, pac_config, tools),
-         {:ok, state_updates} <- calculate_state_updates(execution_result, pac_config),
-         {:ok, _} <- apply_state_updates(pac_id, state_updates) do
-
-      result = %{
-        action: action,
-        execution_result: execution_result,
-        state_updates: state_updates,
-        success: true,
-        timestamp: DateTime.utc_now()
-      }
-
-      Logger.debug("Successfully executed action '#{action}' for PAC #{pac_config.pac_name}")
-      {:ok, result}
-    else
-      {:error, reason} ->
-        Logger.warn("Action execution failed for PAC #{pac_config.pac_name}: #{inspect(reason)}")
-
-        # Return failure result with partial information
-        failure_result = %{
-          action: action,
-          success: false,
-          error: reason,
-          timestamp: DateTime.utc_now()
-        }
-
-        {:ok, failure_result}  # Don't fail the whole tick on action failure
-    end
+  @impl true
+  def run(params, _context) do
+    %{:decision => decision, :pac_config => pac_config} = params
+    Thunderline.AgentCore.ActionExecutor.run(decision, pac_config)
   end
 
   # Action Planning

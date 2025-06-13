@@ -2,7 +2,7 @@
   // VS Code ElixirLS configuration
   "elixirLS.projectDir": "${workspaceFolder}",
   "elixirLS.dialyzerEnabled": false,
-  "elixirLS.fetchDeps": false,
+  "elixirLS.fetchDeps": true,
   "elixirLS.mixEnv": "dev",
   "elixirLS.logLevel": "debug",
   "files.watcherExclude": {

@@ -30,64 +30,9 @@ defmodule Thunderline.Agents.Actions.AssessContext do
   alias Thunderline.Agents.AIProvider
 
   @impl true
-  def run(params, context) do
-    %{
-      agent: agent,
-      zone_context: zone_context,
-      memories: memories,
-      available_tools: tools,
-      tick_count: tick_count,
-      federation_context: federation_context
-    } = params
-
-    Logger.debug("Assessing context for PAC Agent #{agent.name}")
-
-    # Build context for AI assessment
-    assessment_context = %{
-      agent_name: agent.name,
-      traits: agent.traits || [],
-      stats: agent.stats || %{},
-      current_state: agent.state || %{},
-      environment_context: zone_context,
-      memories: memories,
-      available_tools: tools,
-      tick_count: tick_count,
-      federation_context: federation_context
-    }
-
-    # Generate AI assessment
-    prompt = PromptManager.generate_context_prompt(assessment_context)
-
-    case AIProvider.reason(prompt, assessment_context) do
-      {:ok, ai_assessment} ->
-        # Combine AI assessment with additional analysis
-        with {:ok, needs_assessment} <- assess_needs(agent, tick_count),
-             {:ok, memory_relevance} <- evaluate_memories(memories, agent),
-             {:ok, capability_map} <- map_capabilities(tools, agent) do
-
-          assessment = %{
-            ai_assessment: ai_assessment,
-            needs: needs_assessment,
-            memory_relevance: memory_relevance,
-            capabilities: capability_map,
-            context_summary: generate_context_summary(ai_assessment, agent),
-            timestamp: DateTime.utc_now(),
-            agent_name: agent.name,
-            stats: agent.stats,
-            traits: agent.traits,
-            goals: Map.get(agent.state, "goals", []),
-            federation_context: federation_context
-          }
-
-          Logger.debug("Context assessment completed for #{agent.name}")
-          {:ok, assessment}
-        end
-
-      {:error, reason} ->
-        Logger.warning("AI assessment failed for #{agent.name}: #{inspect(reason)}")
-        # Fall back to rule-based assessment
-        fallback_assessment(agent, zone_context, memories, tools, tick_count, federation_context)
-    end
+  def run(params, _context) do
+    %{agent: agent, zone_context: zone, memories: memories} = params
+    Thunderline.AgentCore.ContextAssessor.run(agent, zone, memories, %{})
   end
 
   # Fallback Assessment
