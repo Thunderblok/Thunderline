@@ -32,8 +32,7 @@ defmodule Thunderline.Agents.PACAgent do
   alias Thunderline.MCP.{Server, ToolRegistry}
   alias Thunderline.Memory.Manager, as: MemoryManager
   alias Thunderline.Agents.AIProvider
-
-  @type agent_result :: {:ok, term()} | {:error, term()}
+  @type pac_agent_result :: {:ok, term()} | {:error, term()}
   @type reasoning_context :: %{
     agent: Agent.t(),
     zone_context: map(),
@@ -72,7 +71,7 @@ defmodule Thunderline.Agents.PACAgent do
   and builds a comprehensive understanding of the current state
   with federation awareness.
   """
-  @spec assess_context(pid(), reasoning_context()) :: agent_result()
+  @spec assess_context(pid(), reasoning_context()) :: pac_agent_result()
   def assess_context(agent_pid, context) do
     signal = build_signal("thunderline.pac.assess_context", context)
     call(agent_pid, signal)
@@ -85,7 +84,7 @@ defmodule Thunderline.Agents.PACAgent do
   given the PAC Agent's goals, constraints, available options,
   and federation context.
   """
-  @spec make_decision(pid(), map()) :: agent_result()
+  @spec make_decision(pid(), map()) :: pac_agent_result()
   def make_decision(agent_pid, assessment) do
     signal = build_signal("thunderline.pac.make_decision", assessment)
     call(agent_pid, signal)
@@ -97,7 +96,7 @@ defmodule Thunderline.Agents.PACAgent do
   Translates high-level decisions into concrete actions
   via the MCP tool registry, with federation coordination.
   """
-  @spec execute_action(pid(), map()) :: agent_result()
+  @spec execute_action(pid(), map()) :: pac_agent_result()
   def execute_action(agent_pid, decision) do
     signal = build_signal("thunderline.pac.execute_action", decision)
     call(agent_pid, signal)
@@ -110,7 +109,7 @@ defmodule Thunderline.Agents.PACAgent do
   meaningful memories for future context retrieval with
   federation metadata.
   """
-  @spec form_memory(pid(), map()) :: agent_result()
+  @spec form_memory(pid(), map()) :: pac_agent_result()
   def form_memory(agent_pid, experience) do
     signal = build_signal("thunderline.pac.form_memory", experience)
     call(agent_pid, signal)
