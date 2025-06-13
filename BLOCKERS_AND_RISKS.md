@@ -94,4 +94,53 @@ This document summarizes the key technical and integration blockers preventing a
 
 ---
 
+## 🔧 ✅ Ash DSL Fixes & Confirmed Patterns
+
+**FIX 1: Sort & Limit in read actions**
+- Use `sort:` and `limit:` inside `read` blocks, not as top-level macros or function calls.
+
+  Correct example:
+  ```elixir
+  read :recent_logs do
+    argument :limit, :integer, default: 20
+    sort [inserted_at: :desc]
+    limit expr(^arg(:limit))
+  end
+  ```
+
+**FIX 2: Use `expr/1` for interpolated limits and filters**
+- Wrap runtime args in `expr/1` when interpolating with `arg/1`, e.g. `limit expr(^arg(:limit))`.
+
+
+**Suggested Snippet for `Thunderline.Tick.Log`:**
+```elixir
+read :recent do
+  argument :limit, :integer, default: 50
+
+  sort [inserted_at: :desc]
+  limit expr(^arg(:limit))
+end
+
+read :for_agent_recent do
+  argument :agent_id, :uuid, allow_nil?: false
+  argument :limit, :integer, default: 20
+
+  filter expr(agent_id == ^arg(:agent_id))
+  sort [inserted_at: :desc]
+  limit expr(^arg(:limit))
+end
+```
+
+**Code Review Note:**
+- Audit all resources for `sort()` or `limit()` usage; migrate to inline `sort [...]` and `limit expr(...)` blocks.
+- Ensure each `arg/1` is declared above its usage to avoid silent failures.
+
+**Executive Summary:**
+- Ash DSL is correct; fixes are about misused macros.
+- `sort` and `limit` belong inside `read` blocks.
+- Interpolation requires `expr(^arg(...))`.
+- Do not call `sort()` or `limit()` at module root.
+
+---
+
 Thank you for your review. We welcome any guidance on priorities or additional support to get ZEUS fully operational.
