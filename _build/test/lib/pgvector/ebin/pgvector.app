@@ -1,0 +1,10 @@
+{application,pgvector,
+             [{modules,['Elixir.Inspect.Pgvector','Elixir.Pgvector',
+                        'Elixir.Pgvector.Ecto.Query',
+                        'Elixir.Pgvector.Ecto.Vector',
+                        'Elixir.Pgvector.Extensions.Vector']},
+              {optional_applications,[ecto,nx]},
+              {applications,[kernel,stdlib,elixir,postgrex,ecto,nx]},
+              {description,"pgvector support for Elixir"},
+              {registered,[]},
+              {vsn,"0.2.1"}]}.

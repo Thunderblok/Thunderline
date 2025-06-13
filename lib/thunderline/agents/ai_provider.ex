@@ -604,6 +604,40 @@ defmodule Thunderline.Agents.AIProvider do
 
     {:ok, response}
   end
+  defp infer_emotional_state(stats, traits) do
+    energy = Map.get(stats, "energy", 50)
+    focus = Map.get(stats, "focus", 50)
+    stress = Map.get(stats, "stress", 0)
+
+    mood_traits = Enum.filter(traits, fn {trait, _} ->
+      trait in ["optimism", "resilience", "anxiety", "confidence"]
+    end)
+
+    base_mood = cond do
+      energy > 70 and stress < 30 -> "energetic"
+      energy < 30 -> "tired"
+      stress > 70 -> "stressed"
+      focus > 70 -> "focused"
+      true -> "neutral"
+    end
+
+    # Modify base mood based on personality traits
+    modified_mood = Enum.reduce(mood_traits, base_mood, fn {trait, value}, mood ->
+      case {trait, value} do
+        {"optimism", val} when val > 70 and mood == "neutral" -> "optimistic"
+        {"anxiety", val} when val > 60 -> "anxious"
+        {"confidence", val} when val > 80 -> "confident"
+        _ -> mood
+      end
+    end)
+
+    %{
+      "primary_mood" => modified_mood,
+      "energy_level" => energy,
+      "stress_level" => stress,
+      "emotional_stability" => max(0, 100 - stress)
+    }
+  end
 
   defp build_memory_content(action, result, insights) do
     success_text = if Map.get(result, "success", false), do: "successfully", else: "unsuccessfully"

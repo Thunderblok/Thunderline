@@ -1,0 +1,11 @@
+{application,broadway_sqs,
+             [{modules,['Elixir.BroadwaySQS.ExAwsClient',
+                        'Elixir.BroadwaySQS.Options',
+                        'Elixir.BroadwaySQS.Producer',
+                        'Elixir.BroadwaySQS.SQSClient']},
+              {optional_applications,[]},
+              {applications,[kernel,stdlib,elixir,logger,broadway,ex_aws_sqs,
+                             nimble_options,telemetry,saxy]},
+              {description,"A SQS connector for Broadway"},
+              {registered,[]},
+              {vsn,"0.7.4"}]}.

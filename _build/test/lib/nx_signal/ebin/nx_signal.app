@@ -1,0 +1,10 @@
+{application,nx_signal,
+             [{modules,['Elixir.NxSignal','Elixir.NxSignal.Filters',
+                        'Elixir.NxSignal.PeakFinding',
+                        'Elixir.NxSignal.Waveforms',
+                        'Elixir.NxSignal.Windows']},
+              {optional_applications,[]},
+              {applications,[kernel,stdlib,elixir,logger,nx]},
+              {description,"Digital Signal Processing extension for Nx"},
+              {registered,[]},
+              {vsn,"0.2.0"}]}.

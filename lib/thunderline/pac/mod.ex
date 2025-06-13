@@ -9,11 +9,12 @@ defmodule Thunderline.PAC.Mod do
   - Tool integrations
   - Memory augmentations
   """
-
   use Ash.Resource,
     domain: Thunderline.Domain,
     data_layer: AshPostgres.DataLayer,
     extensions: [AshJsonApi.Resource]
+
+  import Ash.Resource.Change
 
   alias Thunderline.PAC.Agent
 
@@ -107,7 +108,6 @@ defmodule Thunderline.PAC.Mod do
       allow_nil? false
     end
   end
-
   actions do
     defaults [:read, :destroy]
 
@@ -125,7 +125,6 @@ defmodule Thunderline.PAC.Mod do
 
     update :apply_to_agent do
       accept []
-
       change fn changeset, _context ->
         # This will be called when applying the mod's effects to an agent
         # Implementation would depend on the specific mod type and effects
@@ -135,12 +134,16 @@ defmodule Thunderline.PAC.Mod do
 
     update :deactivate do
       accept []
-      change set(:active, false)
+      change fn changeset, _ ->
+        Ash.Changeset.change_attribute(changeset, :active, false)
+      end
     end
 
     update :activate do
       accept []
-      change set(:active, true)
+      change fn changeset, _ ->
+        Ash.Changeset.change_attribute(changeset, :active, true)
+      end
     end
 
     read :by_agent do
