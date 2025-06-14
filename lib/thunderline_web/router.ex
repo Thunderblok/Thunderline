@@ -15,11 +15,16 @@ defmodule ThunderlineWeb.Router do
     plug :accepts, ["json"]
     # plug :load_from_bearer # Commented out until authentication is configured
   end
-
   scope "/", ThunderlineWeb do
     pipe_through :browser
 
-    get "/", PageController, :home    # Authentication routes - commented out until properly configured
+    get "/", PageController, :home
+
+    # OKO GridWorld Map
+    live "/map", MapLive, :index
+    live "/map/:region", MapLive, :region
+
+    # Authentication routes - commented out until properly configured
     # auth_routes AuthController, Thunderline.Accounts.User, path: "/auth"
     # sign_out_route AuthController
 

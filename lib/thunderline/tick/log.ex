@@ -21,6 +21,8 @@ defmodule Thunderline.Tick.Log do
   - Federation analytics and cross-node insights
   """
 
+  require Logger
+
   use Ash.Resource,
     domain: Thunderline.Domain,
     data_layer: AshPostgres.DataLayer

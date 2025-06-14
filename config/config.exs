@@ -1,5 +1,8 @@
 import Config
 
+# Configure Ecto repositories
+config :thunderline, ecto_repos: [Thunderline.Repo]
+
 # Configure your database
 config :thunderline, Thunderline.Repo,
   adapter: Ecto.Adapters.Postgres,

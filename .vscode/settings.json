@@ -1,9 +1,8 @@
 {
-  // VS Code ElixirLS configuration - Fixed project directory path
-  "elixirLS.projectDir": "c:/Users/mo/Desktop/Thunderline1/Thunderline",
+  // VS Code ElixirLS configuration - Force use current workspace directory
   "elixirLS.dialyzerEnabled": false,
   "elixirLS.fetchDeps": true,
-  "elixirLS.mixEnv": "dev",
+  "elixirLS.mixEnv": "dev", 
   "elixirLS.logLevel": "info",
   "elixirLS.useCurrentRootFolderAsProjectDir": true,
   "elixirLS.autoBuild": true,

@@ -1,0 +1,22 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "elixirLS.projectDir": "",
+    "elixirLS.useCurrentRootFolderAsProjectDir": true,
+    "elixirLS.dialyzerEnabled": false,
+    "elixirLS.fetchDeps": true,
+    "elixirLS.mixEnv": "dev",
+    "elixirLS.logLevel": "info",
+    "elixirLS.autoBuild": true
+  },
+  "extensions": {
+    "recommendations": [
+      "jakebecker.elixir-ls",
+      "msaraiva.surface"
+    ]
+  }
+}
