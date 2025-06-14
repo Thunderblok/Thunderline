@@ -1,9 +1,10 @@
+# ☤ PAC Mod Resource - Agent Enhancement System
 defmodule Thunderline.PAC.Mod do
   @moduledoc """
-  Mod Resource - Modifications and enhancements to PAC agents.
+  Mod Resource - Modifications and enhancements to PAC agents. ☤
 
   Mods represent:
-  - Behavioral modifications
+  - Behavioral modifications ☤
   - Capability enhancements
   - Temporary or permanent changes
   - Tool integrations
@@ -17,7 +18,6 @@ defmodule Thunderline.PAC.Mod do
   import Ash.Resource.Change
 
   alias Thunderline.PAC.Agent
-
   postgres do
     table "pac_mods"
     repo Thunderline.Repo
@@ -25,7 +25,7 @@ defmodule Thunderline.PAC.Mod do
     custom_indexes do
       index [:pac_agent_id]
       index [:mod_type]
-      index [:config], using: :gin
+      index [:config], using: "gin"
     end
   end
 
@@ -213,18 +213,17 @@ defmodule Thunderline.PAC.Mod do
       where present(:duration)
     end
   end
-
-  code_interface do
-    define_for Thunderline.Domain
-    define :create, args: [:name, :mod_type, :pac_agent_id]
-    define :get_by_id, action: :read, get_by: [:id]
-    define :update
-    define :apply_to_agent
-    define :activate
-    define :deactivate
-    define :list_by_agent, action: :by_agent, args: [:pac_agent_id]
-    define :list_by_type, action: :by_type, args: [:mod_type]
-    define :list_active, action: :active
-    define :list_expired, action: :expired
-  end
+  # code_interface do
+  #   define_for Thunderline.Domain
+  #   define :create, args: [:name, :mod_type, :pac_agent_id]
+  #   define :get_by_id, action: :read, get_by: [:id]
+  #   define :update
+  #   define :apply_to_agent
+  #   define :activate
+  #   define :deactivate
+  #   define :list_by_agent, action: :by_agent, args: [:pac_agent_id]
+  #   define :list_by_type, action: :by_type, args: [:mod_type]
+  #   define :list_active, action: :active
+  #   define :list_expired, action: :expired
+  # end
 end

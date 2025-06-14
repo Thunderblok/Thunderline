@@ -1,6 +1,7 @@
+# ☤ Tick Pipeline - Agent Reasoning Orchestration System
 defmodule Thunderline.Tick.Pipeline do
   @moduledoc """
-  Tick Pipeline - Orchestrates the execution of a single PAC Agent tick cycle.
+  Tick Pipeline - Orchestrates the execution of a single PAC Agent tick cycle. ☤
 
   The pipeline represents the core reasoning loop for PAC Agents:
 

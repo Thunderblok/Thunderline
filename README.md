@@ -1,6 +1,57 @@
+<<<<<<< HEAD
 # ☤ Thunderline: Sovereign AI Agent Substrate
 
 > **Complete AI Agent Platform with Real-Time Dashboard Integration**
+=======
+# ☤ THUNDERLINE SOVEREIGN SUBSTRATE - README ☤
+
+**Autonomous AI Agent Federation Platform**  
+**Status**: ✅ **OPERATIONAL - SPATIAL TRACKING IN PROGRESS** ☤  
+**Version**: 2.0.0-spatial  
+**Last Updated**: June 13, 2025
+
+---
+
+## 🎯 **WHAT IS THUNDERLINE?**
+
+Thunderline is a **sovereign AI agent substrate** that enables the creation, coordination, and evolution of Personal Autonomous Creations (PACs) across a federated network. Think of it as a distributed operating system for AI agents, where each PAC can think, learn, and interact autonomously while contributing to a larger collective intelligence.
+
+### **Core Capabilities**
+- **🤖 Autonomous Agents**: PACs with personality, memory, and reasoning capabilities
+- **🌐 Federation Ready**: Multi-node coordination with spatial awareness
+- **🧠 Vector Memory**: Semantic search and graph relationships
+- **⚡ Real-time Processing**: High-throughput tick-based evolution
+- **🛠️ Tool Integration**: Dynamic capability expansion via MCP protocol
+- **📊 Spatial Tracking**: 3D world position coordination (in progress)
+
+### **Strategic Value**
+- **Complete Sovereignty**: Zero external dependencies
+- **Unlimited Scalability**: Horizontal scaling across nodes
+- **Advanced AI Integration**: GPT-4+ reasoning with tool use
+- **Production Ready**: Enterprise-grade reliability and performance
+
+---
+
+## 🚀 Quick Start
+
+Thunderline is a modular AI-human collaboration substrate featuring autonomous PAC (Personal Autonomous Creation) agents with neural memory systems, spatial zone management, and evolution tracking. The system has been successfully refactored to a sovereign AgentCore architecture with all major compilation errors resolved.
+
+### **Key Features** ☤
+- 🤖 **PAC Agent System**: Sovereign autonomous reasoning agents with AgentCore
+- 🧠 **Neural Memory**: Graph-based memory nodes with vector embeddings  
+- 📍 **Zone Management**: Spatial containers for agent organization
+- ⏰ **Tick Pipeline**: Broadway-based evolution tracking and decision logging
+- 🔧 **Mod System**: Dynamic agent enhancement capabilities
+- 🌐 **World Position Coordination**: Real-time 3D spatial tracking (implementing)
+- 🎯 **Governor Network**: Regional coordination for multi-agent systems
+
+### **Recent Achievements** ☤
+- ✅ **Clean Compilation**: All Ash DSL syntax errors resolved
+- ✅ **Database Compatibility**: PostgreSQL `:gin` index issues fixed
+- ✅ **Caduceus Integration**: Professional branding across codebase
+- ✅ **AgentCore Architecture**: Refactored from Jido dependencies
+- ✅ **Warning Elimination**: Logger deprecations and type issues resolved
+>>>>>>> 212c31da4e9706490626ecae353f8378e49f0d18
 
 **Status**: ✅ **READY FOR AI DEV TEAM TAKEOVER** ☤  
 **Phase**: Integration Implementation Ready  
@@ -14,9 +65,17 @@ Thunderline is a production-ready platform for building and running autonomous A
 - **Tick Processing Pipeline**: Broadway + Oban for concurrent agent evolution
 - **Narrative Engine**: Human-readable stories of agent decisions and actions
 - **Model Context Protocol (MCP)**: Standardized interface for AI agent tool interaction
+<<<<<<< HEAD
+=======
+- **Memory Graph System**: Persistent, searchable memory with vector embeddings and graph relationships
+- **Tick-Based Simulation**: Coordinated agent evolution and interaction with Broadway pipeline
+- **Zone Management**: Spatial and conceptual environments for agents
+- **World Position Coordination**: 3D spatial tracking with bi-tick sync cadence
+>>>>>>> 212c31da4e9706490626ecae353f8378e49f0d18
 
 ## 🚀 **NEW: Complete Development Framework Available**
 
+<<<<<<< HEAD
 **For AI Development Teams**: We've consolidated all project documentation into a comprehensive development framework based on the latest integration research. Everything you need is now in the [`docs/`](docs/) directory.
 
 **👉 START HERE: [Complete Documentation Index](docs/README.md)**
@@ -27,6 +86,33 @@ Thunderline is a production-ready platform for building and running autonomous A
 - **[Development Guide](docs/DEVELOPMENT_GUIDE.md)** - Complete implementation framework with code examples
 - **[Kanban Board](docs/KANBAN_BOARD.md)** - Sprint planning and detailed task breakdown  
 - **[Architecture Overview](docs/ARCHITECTURE_COMPLETE.md)** - Technical deep dive and system design
+=======
+### 🤖 PAC Agent Framework
+- Autonomous agents with stats, traits, and evolving state
+- Personality-driven behavior and decision making via AgentCore
+- Mod system for capability enhancement
+- Tick-based lifecycle management with Broadway processing
+- **NEW**: 3D position tracking and spatial awareness
+
+### 🧠 Advanced Memory System
+- Vector embeddings for semantic memory search (pgvector enabled)
+- Graph-based memory relationships with MemoryEdge connections
+- Automatic memory consolidation and pruning
+- Multi-modal memory types (episodic, semantic, procedural, emotional)
+
+### 🔧 Model Context Protocol (MCP)
+- Standardized tool interface for AI agents
+- WebSocket-based communication
+- Extensible tool registry with schema validation
+- Session management and authentication
+
+### 🌍 Spatial Environment
+- Zone-based agent organization with capacity management
+- Environmental properties and rules
+- Resource management and scarcity
+- **NEW**: Regional Governor nodes for spatial coordination
+- Agent interaction boundaries
+>>>>>>> 212c31da4e9706490626ecae353f8378e49f0d18
 
 ### 📊 **For Project Managers**
 - **[Project Roadmap](docs/PROJECT_ROADMAP.md)** - Strategic status and execution plan

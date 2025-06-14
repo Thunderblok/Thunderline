@@ -298,7 +298,7 @@ defmodule Thunderline.Agents.AIProvider do
     opportunities
   end
 
-  defp identify_threats(environment, stats, federation) do
+  defp identify_threats(_environment, stats, federation) do
     threats = []
 
     # Energy-based threats
@@ -425,7 +425,7 @@ defmodule Thunderline.Agents.AIProvider do
     end
   end
 
-  defp build_action_reasoning(action, base_score, federation_modifier, federation) do
+  defp build_action_reasoning(action, _base_score, federation_modifier, federation) do
     base_reason = case action do
       "rest" -> "Need to restore energy levels"
       "think" -> "Time for reflection and planning"
@@ -442,7 +442,7 @@ defmodule Thunderline.Agents.AIProvider do
     end
   end
 
-  defp predict_outcome(action, stats, federation) do
+  defp predict_outcome(action, _stats, federation) do
     base_outcome = case action do
       "rest" -> "Increased energy and well-being"
       "think" -> "Greater clarity and insight"
@@ -509,7 +509,7 @@ defmodule Thunderline.Agents.AIProvider do
     base_impact * emotional_multiplier
   end
 
-  defp extract_insights(action, result, traits, federation) do
+  defp extract_insights(action, result, _traits, federation) do
     insights = []
 
     # Action-specific insights
@@ -554,7 +554,7 @@ defmodule Thunderline.Agents.AIProvider do
     base_importance + (intensity * 0.2)
   end
 
-  defp assess_federation_relevance(action, result, federation) do
+  defp assess_federation_relevance(action, _result, federation) do
     if Map.get(federation, :federation_enabled, false) do
       case action do
         "interact" -> 0.8 # High federation relevance

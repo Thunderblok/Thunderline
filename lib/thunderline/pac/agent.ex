@@ -1,6 +1,7 @@
+# ☤ PAC Agent Resource - Autonomous Entity System
 defmodule Thunderline.PAC.Agent do
   @moduledoc """
-  PAC Agent Resource - Autonomous entities in the Thunderline substrate.
+  PAC Agent Resource - Autonomous entities in the Thunderline substrate. ☤
 
   A PAC Agent represents an autonomous entity with:
   - Identity and personality traits
@@ -27,8 +28,8 @@ defmodule Thunderline.PAC.Agent do
     custom_indexes do
       index [:name], unique: true
       index [:zone_id]
-      index [:state], using: :gin
-      index [:traits], using: :gin
+      index [:state], using: "gin"
+      index [:traits], using: "gin"
     end
   end
 
@@ -192,15 +193,14 @@ defmodule Thunderline.PAC.Agent do
       where changing(:name)
     end
   end
-
-  code_interface do
-    define_for Thunderline.Domain
-    define :create, args: [:name, :zone_id]
-    define :get_by_id, action: :read, get_by: [:id]
-    define :get_by_name, action: :read, get_by: [:name]
-    define :update
-    define :tick
-    define :list_by_zone, action: :by_zone, args: [:zone_id]
-    define :list_active, action: :active
-  end
+  # code_interface do
+  #   define_for Thunderline.Domain
+  #   define :create, args: [:name, :zone_id]
+  #   define :get_by_id, action: :read, get_by: [:id]
+  #   define :get_by_name, action: :read, get_by: [:name]
+  #   define :update
+  #   define :tick
+  #   define :list_by_zone, action: :by_zone, args: [:zone_id]
+  #   define :list_active, action: :active
+  # end
 end

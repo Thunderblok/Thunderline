@@ -1,6 +1,7 @@
+# ☤ Memory Edge Resource - Neural Connection System
 defmodule Thunderline.Memory.MemoryEdge do
   @moduledoc """
-  Memory Edge Resource - Connections between memory nodes.
+  Memory Edge Resource - Connections between memory nodes. ☤
   """
 
   use Ash.Resource,
@@ -157,17 +158,16 @@ defmodule Thunderline.Memory.MemoryEdge do
     validate compare(:strength, less_than_or_equal_to: Decimal.new("1.0"),
                     message: "Strength must be between 0.0 and 1.0")
   end
-
-  code_interface do
-    define_for Thunderline.Domain
-    define :create, args: [:from_node_id, :to_node_id, :relationship]
-    define :get_by_id, action: :read, get_by: [:id]
-    define :update
-    define :strengthen
-    define :weaken
-    define :list_by_from_node, action: :by_from_node, args: [:from_node_id]
-    define :list_by_to_node, action: :by_to_node, args: [:to_node_id]
-    define :list_by_relationship, action: :by_relationship, args: [:relationship]
-    define :list_strong_connections, action: :strong_connections, args: [:min_strength]
-  end
+  # code_interface do
+  #   define_for Thunderline.Domain
+  #   define :create, args: [:from_node_id, :to_node_id, :relationship]
+  #   define :get_by_id, action: :read, get_by: [:id]
+  #   define :update
+  #   define :strengthen
+  #   define :weaken
+  #   define :list_by_from_node, action: :by_from_node, args: [:from_node_id]
+  #   define :list_by_to_node, action: :by_to_node, args: [:to_node_id]
+  #   define :list_by_relationship, action: :by_relationship, args: [:relationship]
+  #   define :list_strong_connections, action: :strong_connections, args: [:min_strength]
+  # end
 end

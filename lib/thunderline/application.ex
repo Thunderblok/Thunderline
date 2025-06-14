@@ -1,6 +1,7 @@
+# ☤ Thunderline Application - Sovereign AI Agent Substrate
 defmodule Thunderline.Application do
   @moduledoc """
-  The Thunderline Application - A sovereign AI agent substrate.
+  The Thunderline Application - A sovereign AI agent substrate. ☤
 
   Thunderline is a standalone Phoenix/Ash/Oban application that provides:
   - PAC (Perception-Action-Cognition) agent framework

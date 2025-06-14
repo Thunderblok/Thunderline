@@ -51,7 +51,9 @@ defmodule Thunderline.MixProject do
       {:broadway_sqs, "~> 0.7", optional: true},
       {:gen_stage, "~> 1.0"},      # HTTP Client & JSON
       {:req, "~> 0.5.0"},
-      {:jason, "~> 1.2"},      # AI & LLM
+      {:jason, "~> 1.2"},
+
+      # AI & LLM
       {:langchain, "~> 0.3.0-rc.0"},
       {:ex_openai, "~> 1.0"},
 

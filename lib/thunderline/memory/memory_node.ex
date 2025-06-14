@@ -1,6 +1,7 @@
+# ☤ Memory Node Resource - Thunderline Neural Memory System
 defmodule Thunderline.Memory.MemoryNode do
   @moduledoc """
-  Memory Node Resource - Individual memory units in the agent memory system.
+  Memory Node Resource - Individual memory units in the agent memory system. ☤
   """
 
   use Ash.Resource,
@@ -17,7 +18,7 @@ defmodule Thunderline.Memory.MemoryNode do
 
     custom_indexes do
       index [:agent_id]
-      index [:tags], using: :gin
+      index [:tags], using: "gin"
       index [:embedding], using: "vector"
       index [:importance]
     end
@@ -131,8 +132,7 @@ defmodule Thunderline.Memory.MemoryNode do
               changeset
           end
         else
-          changeset
-        end
+          changeset        end
       end
     end
 
@@ -171,12 +171,6 @@ defmodule Thunderline.Memory.MemoryNode do
       filter expr(
         fragment("? <=> ? < ?", embedding, ^arg(:embedding), ^arg(:threshold))
       )
-
-      sort [
-        fragment("? <=> ?", embedding, ^arg(:embedding))
-      ]
-
-      limit expr(^arg(:limit))
     end
   end
 
@@ -201,19 +195,18 @@ defmodule Thunderline.Memory.MemoryNode do
                     message: "Importance must be between 0.0 and 1.0")
     validate compare(:importance, less_than_or_equal_to: Decimal.new("1.0"),
                     message: "Importance must be between 0.0 and 1.0")
-  end
-
-  code_interface do
-    define_for Thunderline.Domain
-    define :create, args: [:content, :agent_id]
-    define :get_by_id, action: :read, get_by: [:id]
-    define :update
-    define :access
-    define :list_by_agent, action: :by_agent, args: [:agent_id]
-    define :list_by_tags, action: :by_tags, args: [:tags]
-    define :list_by_importance, action: :by_importance, args: [:min_importance]
-    define :find_similar, action: :similar_to, args: [:embedding, :limit, :threshold]
-  end
+  end  # code_interface do
+  #   define_for Thunderline.Domain
+  #
+  #   define :create, args: [:content, :agent_id]
+  #   define :get_by_id, action: :read, get_by: [:id]
+  #   define :update
+  #   define :access
+  #   define :list_by_agent, action: :by_agent, args: [:agent_id]
+  #   define :list_by_tags, action: :by_tags, args: [:tags]
+  #   define :list_by_importance, action: :by_importance, args: [:min_importance]
+  #   define :find_similar, action: :similar_to, args: [:embedding, :limit, :threshold]
+  # end
 
   # Private helper functions
 

@@ -1,7 +1,6 @@
 defmodule ThunderlineWeb.Router do
   use ThunderlineWeb, :router
-  use AshAuthentication.Phoenix.Router
-
+  # use AshAuthentication.Phoenix.Router # Commented out until authentication is properly configured
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -9,25 +8,28 @@ defmodule ThunderlineWeb.Router do
     plug :put_root_layout, html: {ThunderlineWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug :load_from_session
+    # plug :load_from_session # Commented out until authentication is configured
   end
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug :load_from_bearer
+    # plug :load_from_bearer # Commented out until authentication is configured
   end
-
   scope "/", ThunderlineWeb do
     pipe_through :browser
 
     get "/", PageController, :home
 
-    # Authentication routes
-    auth_routes AuthController, Thunderline.Accounts.User, path: "/auth"
-    sign_out_route AuthController
+    # OKO GridWorld Map
+    live "/map", MapLive, :index
+    live "/map/:region", MapLive, :region
 
-    # Reset password
-    reset_route []
+    # Authentication routes - commented out until properly configured
+    # auth_routes AuthController, Thunderline.Accounts.User, path: "/auth"
+    # sign_out_route AuthController
+
+    # Reset password - commented out until properly configured
+    # reset_route []
   end
 
   # API routes

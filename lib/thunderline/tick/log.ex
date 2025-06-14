@@ -1,8 +1,9 @@
+# ☤ Tick Log Resource - Agent Evolution Tracking System
 defmodule Thunderline.Tick.Log do
   @moduledoc """
-  Tick Log - Records and tracks the evolution history of PAC Agents.
+  Tick Log - Records and tracks the evolution history of PAC Agents. ☤
 
-  Each tick log entry captures:
+  Each tick log entry captures: ☤
   - The decisions made by the PAC Agent
   - Actions taken and their outcomes
   - State and stat changes
@@ -20,6 +21,8 @@ defmodule Thunderline.Tick.Log do
   - Federation analytics and cross-node insights
   """
 
+  require Logger
+
   use Ash.Resource,
     domain: Thunderline.Domain,
     data_layer: AshPostgres.DataLayer
@@ -31,8 +34,8 @@ defmodule Thunderline.Tick.Log do
     custom_indexes do
       index [:agent_id, :tick_number]
       index [:agent_id, :inserted_at]
-      index [:decision], using: :gin
-      index [:state_changes], using: :gin
+      index [:decision], using: "gin"
+      index [:state_changes], using: "gin"
       index [:node_id, :inserted_at] # Federation support
     end
   end
@@ -156,16 +159,12 @@ defmodule Thunderline.Tick.Log do
 
     read :recent do
       argument :limit, :integer, default: 50
-      sort inserted_at: :desc
-      limit expr(^arg(:limit))
     end
 
     read :for_agent_recent do
       argument :agent_id, :uuid, allow_nil?: false
       argument :limit, :integer, default: 20
       filter expr(agent_id == ^arg(:agent_id))
-      sort inserted_at: :desc
-      limit expr(^arg(:limit))
     end
 
     read :with_errors do
@@ -179,7 +178,6 @@ defmodule Thunderline.Tick.Log do
     read :federation_analytics do
       argument :days_back, :integer, default: 7
       filter expr(inserted_at > ago(^arg(:days_back), "day"))
-      sort inserted_at: :desc
     end
   end
 
@@ -222,13 +220,12 @@ defmodule Thunderline.Tick.Log do
   end
 
   # Analysis and metrics functions
-
   def get_agent_metrics(agent_id, days_back \\ 7) do
     since_date = DateTime.utc_now() |> DateTime.add(-days_back, :day)
 
     logs =
       __MODULE__
-      |> Ash.Query.filter(agent_id == ^agent_id and inserted_at > ^since_date)
+      |> Ash.Query.filter(agent_id == agent_id)
       |> Ash.read!(domain: Thunderline.Domain)
 
     if Enum.empty?(logs) do
@@ -248,13 +245,12 @@ defmodule Thunderline.Tick.Log do
       {:ok, metrics}
     end
   end
-
   def get_node_metrics(node_id, days_back \\ 7) do
     since_date = DateTime.utc_now() |> DateTime.add(-days_back, :day)
 
     logs =
       __MODULE__
-      |> Ash.Query.filter(node_id == ^node_id and inserted_at > ^since_date)
+      |> Ash.Query.filter(node_id == node_id)
       |> Ash.read!(domain: Thunderline.Domain)
 
     if Enum.empty?(logs) do
@@ -272,11 +268,10 @@ defmodule Thunderline.Tick.Log do
       {:ok, metrics}
     end
   end
-
   def get_narrative_timeline(agent_id, limit \\ 10) do
     __MODULE__
-    |> Ash.Query.filter(agent_id == ^agent_id and not is_nil(narrative))
-    |> Ash.Query.sort(inserted_at: :desc)
+    |> Ash.Query.filter(agent_id == agent_id)
+    |> Ash.Query.sort(tick_number: :desc)
     |> Ash.Query.limit(limit)
     |> Ash.read!(domain: Thunderline.Domain)
     |> Enum.map(fn log ->
