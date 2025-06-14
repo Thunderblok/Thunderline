@@ -1,0 +1,51 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Attach to Chrome",
+            "port": 9222,
+            "request": "attach",
+            "type": "chrome",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "rebar shell",
+            "type": "erlang",
+            "request": "launch",
+            "runinterminal": [
+                "rebar3",
+                "shell",
+                "--sname",
+                "dap-project-node@localhost",
+                "--setcookie",
+                "COOKIE"
+            ],
+            "projectnode": "dap-project-node@localhost",
+            "cookie": "COOKIE",
+            "timeout": 300,
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "name": "rebar shell --start-clean",
+            "type": "erlang",
+            "request": "launch",
+            "runinterminal": [
+                "rebar3",
+                "shell",
+                "--sname",
+                "dap-project-node@localhost",
+                "--setcookie",
+                "COOKIE",
+                "--start-clean"
+            ],
+            "projectnode": "dap-project-node@localhost",
+            "cookie": "COOKIE",
+            "timeout": 300,
+            "cwd": "${workspaceRoot}"
+        }
+    ]
+}
