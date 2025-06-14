@@ -1,5 +1,20 @@
 import Config
 
+# Configure Ash AI
+config :ash_ai,
+  default_provider: AshAI.Providers.OpenAI,
+  openai: [
+    api_key: System.get_env("OPENAI_API_KEY") || "your-openai-api-key-here",
+    organization_id: System.get_env("OPENAI_ORGANIZATION_ID"),
+    model: "gpt-4-turbo-preview",
+    temperature: 0.7
+  ]
+
+# Configure Reactor
+config :reactor,
+  # Enable telemetry for step tracking
+  telemetry: true
+
 # Configure Ecto repositories
 config :thunderline, ecto_repos: [Thunderline.Repo]
 

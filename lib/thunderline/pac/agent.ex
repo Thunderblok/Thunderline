@@ -191,16 +191,16 @@ defmodule Thunderline.PAC.Agent do
   validations do
     validate compare(:name, greater_than: 0, message: "Name cannot be empty") do
       where changing(:name)
-    end
+    end  end
+  code_interface do
+    domain Thunderline.Domain
+
+    define :create, args: [:name, :zone_id]
+    define :get_by_id, action: :read, get_by: [:id]
+    define :get_by_name, action: :read, get_by: [:name]
+    define :update
+    define :tick
+    define :list_by_zone, action: :by_zone, args: [:zone_id]
+    define :list_active, action: :active
   end
-  # code_interface do
-  #   define_for Thunderline.Domain
-  #   define :create, args: [:name, :zone_id]
-  #   define :get_by_id, action: :read, get_by: [:id]
-  #   define :get_by_name, action: :read, get_by: [:name]
-  #   define :update
-  #   define :tick
-  #   define :list_by_zone, action: :by_zone, args: [:zone_id]
-  #   define :list_active, action: :active
-  # end
 end

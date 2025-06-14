@@ -213,17 +213,18 @@ defmodule Thunderline.PAC.Mod do
       where present(:duration)
     end
   end
-  # code_interface do
-  #   define_for Thunderline.Domain
-  #   define :create, args: [:name, :mod_type, :pac_agent_id]
-  #   define :get_by_id, action: :read, get_by: [:id]
-  #   define :update
-  #   define :apply_to_agent
-  #   define :activate
-  #   define :deactivate
-  #   define :list_by_agent, action: :by_agent, args: [:pac_agent_id]
-  #   define :list_by_type, action: :by_type, args: [:mod_type]
-  #   define :list_active, action: :active
-  #   define :list_expired, action: :expired
-  # end
+  code_interface do
+    domain Thunderline.Domain
+
+    define :create, args: [:name, :mod_type, :pac_agent_id]
+    define :get_by_id, action: :read, get_by: [:id]
+    define :update
+    define :apply_to_agent
+    define :activate
+    define :deactivate
+    define :list_by_agent, action: :by_agent, args: [:pac_agent_id]
+    define :list_by_type, action: :by_type, args: [:mod_type]
+    define :list_active, action: :active
+    define :list_expired, action: :expired
+  end
 end

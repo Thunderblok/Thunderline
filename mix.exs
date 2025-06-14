@@ -54,6 +54,8 @@ defmodule Thunderline.MixProject do
       {:jason, "~> 1.2"},
 
       # AI & LLM
+      {:ash_ai, "~> 0.1"},
+      {:reactor, "~> 0.15"},
       {:langchain, "~> 0.3.0-rc.0"},
       {:ex_openai, "~> 1.0"},
 

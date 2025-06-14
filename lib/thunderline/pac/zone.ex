@@ -178,14 +178,16 @@ defmodule Thunderline.PAC.Zone do
     validate compare(:size, greater_than: 0, message: "Size must be positive")
     validate compare(:max_agents, greater_than: 0, message: "Max agents must be positive")
   end
-  # code_interface do
-  #   define_for Thunderline.Domain
-  #   define :create, args: [:name]
-  #   define :get_by_id, action: :read, get_by: [:id]
-  #   define :get_by_name, action: :read, get_by: [:name]
-  #   define :update
-  #   define :tick
-  #   define :with_agents
-  #   define :available_for_spawning
-  # end
+  code_interface do
+    domain Thunderline.Domain
+
+    define :create, args: [:name]
+    define :get_by_id, action: :read, get_by: [:id]
+    define :get_by_name, action: :read, get_by: [:name]
+    define :update
+    define :tick
+    define :with_agents
+    define :available_for_spawning
+    define :list_all, action: :read
+  end
 end

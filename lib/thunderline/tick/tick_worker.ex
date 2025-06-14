@@ -23,25 +23,25 @@ defmodule Thunderline.Tick.TickWorker do
 
   require Logger
 
-  alias Thunderline.PAC.{Agent, Zone, Manager}
-  alias Thunderline.Tick.{Pipeline, Log}
+  alias Thunderline.PAC.{Agent, Zone}
   alias Thunderline.Memory.Manager, as: MemoryManager
+  alias Thunderline.PAC.AgentTickReactor
+
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"agent_id" => agent_id} = args} = job) do
-    Logger.debug("Starting tick for PAC Agent #{agent_id}")
+  def perform(%Oban.Job{args: %{"agent_id" => agent_id}} = job) do
+    Logger.debug("Starting tick for PAC Agent #{agent_id} using Ash AI + Reactor pipeline")
 
     # Extract Broadway metadata if available
     broadway_metadata = extract_broadway_metadata(job)
 
     with {:ok, agent} <- load_agent(agent_id),
-         {:ok, context} <- build_tick_context(agent, args),
-         {:ok, result} <- Pipeline.execute_tick(agent, context),
-         {:ok, _log} <- Log.create_tick_log(agent, result, broadway_metadata) do
+         {:ok, result} <- AgentTickReactor.run(%{agent: agent}),
+         {:ok, _log} <- create_enhanced_tick_log(agent, result, broadway_metadata) do
 
       # Notify orchestrator of completion
       notify_tick_completion(agent_id, result)
 
-      Logger.debug("Completed tick for PAC Agent #{agent.name} (#{agent_id})")
+      Logger.debug("Completed Reactor tick for PAC Agent #{agent.name} (#{agent_id})")
       :ok
     else
       {:error, :agent_not_found} ->
@@ -53,7 +53,7 @@ defmodule Thunderline.Tick.TickWorker do
         :ok
 
       {:error, reason} ->
-        Logger.error("Tick failed for PAC Agent #{agent_id}: #{inspect(reason)}")
+        Logger.error("Reactor tick failed for PAC Agent #{agent_id}: #{inspect(reason)}")
         notify_tick_failure(agent_id, reason)
         {:error, reason}
     end
@@ -77,91 +77,7 @@ defmodule Thunderline.Tick.TickWorker do
         {:error, reason}
     end
   end
-
-  defp build_tick_context(agent, args) do
-    # Calculate time since last tick
-    time_since_last_tick =
-      case agent.updated_at do
-        nil -> 0
-        last_update -> DateTime.diff(DateTime.utc_now(), last_update, :second)
-      end
-
-    # Get zone context if agent is in a zone
-    zone_context =
-      if agent.zone do
-        case Zone.get_by_id(agent.zone.id, load: [:agents]) do
-          {:ok, zone} ->
-            %{
-              zone: zone,
-              zone_agents: zone.agents,
-              zone_properties: zone.properties,
-              zone_rules: zone.rules
-            }
-          _ -> %{}
-        end
-      else
-        %{}
-      end
-
-    # Get recent memories
-    memory_context =
-      case MemoryManager.get_recent_memories(agent.id, limit: 5) do
-        {:ok, memories} -> %{recent_memories: memories}
-        _ -> %{recent_memories: []}
-      end
-
-    # Get active mods affecting the agent
-    mod_context = %{
-      active_mods: agent.mods || [],
-      mod_effects: calculate_mod_effects(agent.mods || [])
-    }
-
-    context = %{
-      agent_id: agent.id,
-      time_since_last_tick: time_since_last_tick,
-      tick_number: Map.get(args, "tick_number", 0),
-      environment: zone_context,
-      memory: memory_context,
-      modifications: mod_context,
-      timestamp: DateTime.utc_now()
-    }
-
-    {:ok, context}
-  end
-
-  defp calculate_mod_effects(mods) do
-    # Calculate cumulative effects from all active mods
-    active_mods = Enum.filter(mods, & &1.active)
-
-    Enum.reduce(active_mods, %{}, fn mod, acc ->
-      effects = mod.effects || %{}
-
-      # Merge stat modifiers
-      stat_mods = Map.get(effects, "stat_modifiers", %{})
-      current_stat_mods = Map.get(acc, :stat_modifiers, %{})
-      new_stat_mods = Map.merge(current_stat_mods, stat_mods, fn _k, v1, v2 -> v1 + v2 end)
-
-      # Merge trait modifiers
-      trait_mods = Map.get(effects, "trait_modifiers", %{})
-      current_trait_mods = Map.get(acc, :trait_modifiers, %{})
-      new_trait_mods = Map.merge(current_trait_mods, trait_mods, fn _k, v1, v2 -> v1 + v2 end)
-
-      # Collect capabilities
-      new_capabilities = Map.get(effects, "new_capabilities", [])
-      current_capabilities = Map.get(acc, :new_capabilities, [])
-
-      # Collect tool access
-      tool_access = Map.get(effects, "tool_access", [])
-      current_tools = Map.get(acc, :tool_access, [])
-
-      %{
-        stat_modifiers: new_stat_mods,
-        trait_modifiers: new_trait_mods,
-        new_capabilities: current_capabilities ++ new_capabilities,
-        tool_access: current_tools ++ tool_access
-      }
-    end)
-  end
+  # Enhanced tick logging for Reactor-based results
 
   defp extract_broadway_metadata(job) do
     %{
@@ -173,6 +89,53 @@ defmodule Thunderline.Tick.TickWorker do
       scheduled_at: job.scheduled_at,
       attempted_at: job.attempted_at,
       inserted_at: job.inserted_at
+    }
+  end
+  defp create_enhanced_tick_log(agent, reactor_result, broadway_metadata) do
+    # Extract information from Reactor result structure
+    action_result = Map.get(reactor_result, :action_result, %{})
+    memory_data = Map.get(reactor_result, :memory_formed, %{})
+    agent_updates = Map.get(reactor_result, :agent, agent)
+
+    # Create log entry with enhanced AI-specific data
+    log_attrs = %{
+      agent_id: agent.id,
+      node_id: get_node_id(),
+      tick_number: get_next_tick_number(agent),
+      decision: %{
+        action: Map.get(action_result, :result_message, "unknown_action"),
+        reasoning: Map.get(memory_data, :memory_content, "No reasoning recorded"),
+        confidence: Map.get(memory_data, :importance_score, 0.5)
+      },
+      actions_taken: [action_result],
+      state_changes: calculate_state_changes(agent, agent_updates),
+      memories_formed: 1,
+      narrative: Map.get(memory_data, :memory_content, "Agent completed tick cycle"),
+      ai_response_time_ms: 0,  # TODO: Add timing
+      broadway_metadata: broadway_metadata,
+      errors: []
+    }
+
+    Thunderline.Tick.Log.create_tick_log(log_attrs)
+  end
+
+  defp get_node_id, do: Node.self() |> Atom.to_string()
+
+  defp get_next_tick_number(agent) do
+    # Get the last tick number from logs and increment
+    case Thunderline.Tick.Log.get_for_agent_recent(agent.id, limit: 1) do
+      {:ok, [last_log | _]} -> (last_log.tick_number || 0) + 1
+      _ -> 1
+    end
+  end
+  defp calculate_state_changes(old_agent, new_agent) do
+    old_stats = old_agent.stats || %{}
+    new_stats = Map.get(new_agent, :stats, old_stats)
+
+    %{
+      stats: %{
+        energy_change: Map.get(new_stats, "energy", 0) - Map.get(old_stats, "energy", 0)
+      }
     }
   end
 

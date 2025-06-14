@@ -194,19 +194,20 @@ defmodule Thunderline.Memory.MemoryNode do
     validate compare(:importance, greater_than_or_equal_to: Decimal.new("0.0"),
                     message: "Importance must be between 0.0 and 1.0")
     validate compare(:importance, less_than_or_equal_to: Decimal.new("1.0"),
-                    message: "Importance must be between 0.0 and 1.0")
-  end  # code_interface do
-  #   define_for Thunderline.Domain
-  #
-  #   define :create, args: [:content, :agent_id]
-  #   define :get_by_id, action: :read, get_by: [:id]
-  #   define :update
-  #   define :access
-  #   define :list_by_agent, action: :by_agent, args: [:agent_id]
-  #   define :list_by_tags, action: :by_tags, args: [:tags]
-  #   define :list_by_importance, action: :by_importance, args: [:min_importance]
-  #   define :find_similar, action: :similar_to, args: [:embedding, :limit, :threshold]
-  # end
+                    message: "Importance must be between 0.0 and 1.0")  end
+  code_interface do
+    domain Thunderline.Domain
+
+    define :create, args: [:content, :agent_id]
+    define :get_by_id, action: :read, get_by: [:id]
+    define :update
+    define :access
+    define :list_by_agent, action: :by_agent, args: [:agent_id]
+    define :list_by_tags, action: :by_tags, args: [:tags]
+    define :list_by_importance, action: :by_importance, args: [:min_importance]
+    define :find_similar, action: :similar_to, args: [:embedding, :limit, :threshold]
+    define :destroy, action: :destroy
+  end
 
   # Private helper functions
 

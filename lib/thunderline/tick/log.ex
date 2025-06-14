@@ -178,8 +178,15 @@ defmodule Thunderline.Tick.Log do
     read :federation_analytics do
       argument :days_back, :integer, default: 7
       filter expr(inserted_at > ago(^arg(:days_back), "day"))
-    end
-  end
+    end  end
+
+  # TODO: Add code_interface once compilation issues are resolved
+  # code_interface do
+  #   define_for Thunderline.Domain
+  #   define :create_tick_log
+  #   define :get_for_agent, action: :for_agent, args: [:agent_id]
+  #   define :get_recent, action: :recent, args: [:limit]
+  # end
 
   # Public interface for creating tick logs
 
