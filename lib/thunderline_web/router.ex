@@ -24,6 +24,10 @@ defmodule ThunderlineWeb.Router do
     live "/map", MapLive, :index
     live "/map/:region", MapLive, :region
 
+    # PAC Dashboard
+    live "/pac_dashboard", PacDashboardLive
+    live "/pac/:id", PacDetailLive
+
     # Authentication routes - commented out until properly configured
     # auth_routes AuthController, Thunderline.Accounts.User, path: "/auth"
     # sign_out_route AuthController
