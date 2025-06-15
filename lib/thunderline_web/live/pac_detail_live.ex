@@ -95,6 +95,9 @@ defmodule ThunderlineWeb.PacDetailLive do
   end
 
   # Handle direct tick updates for the currently viewed PAC
+  # Expected payload: %{agent: map(), result: map()}
+  # agent map should contain at least :id (matching the current @pac.id) and any fields to be updated on the PAC.
+  # result map contains the outcome of the tick, stored in @pac.last_tick_result.
   @impl true
   def handle_info({:tick_update, %{agent: agent_data, result: res}}, socket) do
     current_pac_id = socket.assigns.pac_id
@@ -102,10 +105,14 @@ defmodule ThunderlineWeb.PacDetailLive do
     # Ensure @pac is not nil before attempting to merge, as this handle_info
     # could theoretically be called before mount finishes or if PAC was not found.
     if socket.assigns.pac && agent_data.id == socket.assigns.pac_id do
+      # res is expected to be a map containing details of the agent's last interaction,
+      # potentially including keys like :interaction_type, :target_id, :outcome,
+      # :zone_id, :event_details (map of the zone event encountered), etc.
+      # This is used to populate @pac.last_tick_result for the UI.
       updated_pac =
         socket.assigns.pac
-        |> Map.merge(agent_data) # agent_data should be the agent resource map
-        |> Map.put(:last_tick_result, res)
+        |> Map.merge(agent_data) # agent_data contains general PAC attributes to update
+        |> Map.put(:last_tick_result, res) # res specifically contains the tick outcome details
 
       tick_logs = Log.for_agent_recent(socket.assigns.pac_id)
 
