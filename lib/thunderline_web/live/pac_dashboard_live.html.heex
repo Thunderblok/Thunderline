@@ -1,27 +1,36 @@
 <div class="font-mono text-green-400 bg-black p-6 min-h-screen">
   <h1 class="text-3xl mb-6 text-cyan-400">PAC Dashboard</h1>
 
-  <div id="pac-list-view" class="border border-green-500 p-4 rounded-md">
-    <h2 class="text-xl mb-3 text-lime-400">Active PACs</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <.each :let={pac} id={pac.id} items={@pacs}>
-        <.link navigate={~p"/pac/#{pac.id}"} class="block border border-green-600 p-3 hover:border-lime-500 hover:bg-gray-800 rounded-md transition-colors duration-150">
-          <div class="flex justify-between items-center mb-2">
-            <h3 class="text-lg font-bold text-cyan-400 hover:text-cyan-300"><%= pac.name %></h3>
-            <span class="text-xs text-lime-400 animate-pulse">◉</span>
-          </div>
-          <div class="text-sm">
-            <p>Mood: <span class="text-yellow-300"><%= pac.state["mood"] || "N/A" %></span></p>
-            <p>Energy: <span class="text-orange-300"><%= pac.stats["energy"] || "N/A" %></span></p>
-          </div>
-        </.link>
-      </.each>
-    </div>
-    <p :if={Enum.empty?(@pacs)} class="text-gray-500">No active PACs found.</p>
+  <div :if={@loading} class="flex justify-center items-center h-64">
+    <p class="text-xl text-lime-400 animate-pulse">Loading Dashboard...</p>
   </div>
 
-  <!-- Under the Hood Panel -->
-  <div id="dev-panel" class="mt-8 border border-yellow-500 p-4 rounded-md">
+  <div :if={!@loading}>
+    <div id="pac-list-view" class="border border-green-500 p-4 rounded-md">
+      <h2 class="text-xl mb-3 text-lime-400">Active PACs</h2>
+      <p :if={@zone_data_unavailable} class="text-sm text-yellow-500 mb-3 border border-yellow-600 bg-yellow-900/30 p-2 rounded-md">
+        Zone event data is currently sparse or unavailable. Zone-based highlights on PAC cards may not be active.
+      </p>
+      <div :if={Enum.any?(@pacs)} class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <.each :let={pac} id={pac.id} items={@pacs}>
+          <%# Use the helper function from the LiveView to conditionally apply classes %>
+          <.link navigate={~p"/pac/#{pac.id}"} class={ThunderlineWeb.PacDashboardLive.pac_card_classes(pac, @zone_events)}>
+            <div class="flex justify-between items-center mb-2">
+              <h3 class="text-lg font-bold text-cyan-400 hover:text-cyan-300"><%= pac.name %></h3>
+              <span class="text-xs text-lime-400 animate-pulse">◉</span>
+            </div>
+            <div class="text-sm">
+              <p>Mood: <span class="text-yellow-300"><%= pac.state["mood"] || "N/A" %></span></p>
+              <p>Energy: <span class="text-orange-300"><%= pac.stats["energy"] || "N/A" %></span></p>
+            </div>
+          </.link>
+        </.each>
+      </div>
+      <p :if={Enum.empty?(@pacs)} class="text-gray-500">No active PACs found.</p>
+    </div>
+
+    <!-- Under the Hood Panel -->
+    <div id="dev-panel" class="mt-8 border border-yellow-500 p-4 rounded-md">
     <h2 class="text-xl mb-3 text-yellow-400">🔧 Under the Hood Dev Panel</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
