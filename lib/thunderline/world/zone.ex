@@ -19,6 +19,7 @@ defmodule Thunderline.World.Zone do
   # Import Graphmath for 3D operations
   alias Graphmath.Vec3
 
+
   postgres do
     table "zones"
     repo Thunderline.Repo
@@ -29,6 +30,7 @@ defmodule Thunderline.World.Zone do
       index [:last_updated_at]
     end
   end
+
 
   json_api do
     type "zone"
@@ -42,6 +44,8 @@ defmodule Thunderline.World.Zone do
       delete :destroy
     end
   end
+
+
   attributes do
     uuid_primary_key :id
 
@@ -60,12 +64,15 @@ defmodule Thunderline.World.Zone do
     timestamps()
   end
 
+
   relationships do
     # PACs currently in this zone
     has_many :occupying_agents, Thunderline.PAC.Agent do
       destination_attribute :current_zone_id
     end
   end
+
+
   actions do
     defaults [:read, :destroy]
 
@@ -91,7 +98,8 @@ defmodule Thunderline.World.Zone do
 
       change fn changeset, _context ->
         Ash.Changeset.change_attribute(changeset, :last_updated_at, DateTime.utc_now())
-      end    end
+      end
+    end
 
     # Queries for spatial operations
     read :by_coords do
@@ -104,7 +112,8 @@ defmodule Thunderline.World.Zone do
       argument :range, :float, allow_nil?: false
 
       # Note: This will need custom filter logic for 3D distance
-      # For now, return all zones (to be refined with Graphmath distance calculation)      prepare fn query, _context ->
+      # For now, return all zones (to be refined with Graphmath distance calculation)
+      prepare fn query, _context ->
         query
       end
     end
@@ -119,6 +128,7 @@ defmodule Thunderline.World.Zone do
       filter expr(entropy >= ^arg(:threshold))
     end
   end
+
 
   calculations do
     calculate :occupancy_count, :integer do
@@ -149,6 +159,8 @@ defmodule Thunderline.World.Zone do
       end
     end
   end
+
+
   validations do
     validate fn changeset, _context ->
       coords = Ash.Changeset.get_attribute(changeset, :coords)
@@ -164,16 +176,24 @@ defmodule Thunderline.World.Zone do
     validate compare(:entropy, greater_than_or_equal_to: 0.0)
   end
 
+
   code_interface do
     domain Thunderline.Domain
 
     define :create
+
     define :update
+
     define :tock_update
+
     define :read
+
     define :by_coords, args: [:coords]
+
     define :in_range, args: [:center_coords, :range]
+
     define :with_event_type, args: [:event_type]
+
     define :high_entropy, args: [:threshold]
   end
 end

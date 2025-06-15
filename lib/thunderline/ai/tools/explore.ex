@@ -14,6 +14,8 @@ defmodule Thunderline.AI.Tools.Explore do
     attribute :energy_cost, :integer, default: 10
     timestamps()
   end
+
+
   actions do
     defaults [:read, :destroy]
 
@@ -50,10 +52,12 @@ defmodule Thunderline.AI.Tools.Explore do
     end
   end
 
+
   code_interface do
     domain Thunderline.Domain
 
     define :explore, args: [:direction, :intensity]
+
     define :create
   end
 end

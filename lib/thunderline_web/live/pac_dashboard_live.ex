@@ -53,7 +53,7 @@ defmodule ThunderlineWeb.PacDashboardLive do
     updated_pacs =
       Enum.map(socket.assigns.pacs, fn pac ->
         if pac.id == updated_pac_data.id do
-          Process.send_after(self(), {:clear_pulse, pac.id}, 1000) # Pulse for 1s
+          Process.send_after(self(), {:clear_pulse, pac.id}, 300) # Pulse for 300ms
           Map.merge(pac, Map.merge(updated_pac_data, %{just_updated: true}))
         else
           pac
@@ -160,6 +160,7 @@ defmodule ThunderlineWeb.PacDashboardLive do
   end
 
   # Handle zone updates
+  # Expected payload: %{zone_id: String.t(), event: map()}
   @impl true
   def handle_info({:tock, %{zone_id: id, event: evt}}, socket) do
     updated_zone_events = Map.put(socket.assigns.zone_events, id, evt)
@@ -167,6 +168,9 @@ defmodule ThunderlineWeb.PacDashboardLive do
   end
 
   # Handle agent updates
+  # Expected payload: %{agent: map(), result: map()}
+  # agent map should contain at least :id (and other fields of the PAC resource)
+  # result map contains the outcome of the tick
   @impl true
   def handle_info({:tick_update, %{agent: agent_data, result: res}}, socket) do
     # Create a map with the agent data and the result
@@ -176,7 +180,7 @@ defmodule ThunderlineWeb.PacDashboardLive do
     updated_pacs =
       Enum.map(socket.assigns.pacs, fn pac ->
         if pac.id == agent_data.id do
-          Process.send_after(self(), {:clear_pulse, pac.id}, 1000) # Pulse for 1s
+          Process.send_after(self(), {:clear_pulse, pac.id}, 300) # Pulse for 300ms
           # Merge the new information into the existing PAC data, add last_tick_result and just_updated
           Map.merge(pac, Map.merge(updated_agent_info, %{just_updated: true}))
         else
@@ -215,20 +219,32 @@ defmodule ThunderlineWeb.PacDashboardLive do
   end
 
   def pac_card_classes(pac, zone_events) do
-    base_classes = "block border border-green-600 p-3 hover:border-lime-500 hover:bg-gray-800 rounded-md transition-colors duration-150"
-    pulse_class = if pac.just_updated, do: " pulse-animation", else: ""
+    base_classes = "rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 ease-in-out p-4 block" # New base classes from prompt
 
-    zone_class =
-      if pac.zone_id && zone_events[pac.zone_id] do
-        event = zone_events[pac.zone_id]
-        # Assuming event is a map with a :type or :status, e.g. event.type = :alert
-        # This part is speculative based on future event structure.
-        # For now, let's say any event in the zone adds a generic highlight.
-        " zone-highlight"
+    highlight_class =
+      if pac_zone_id = pac.zone_id do # Assuming pac.zone_id is the correct field for current zone
+        # Check if there's any event for the PAC's current zone
+        if Map.has_key?(zone_events, pac_zone_id) do
+          " zone-highlight" # Add leading space for class concatenation
+        else
+          ""
+        end
       else
-        ""
+        "" # No zone_id for the PAC, so no highlight
       end
 
-    base_classes <> pulse_class <> zone_class
+    pulse_class = if pac.just_updated, do: " pulse-animation", else: "" # Add leading space if used
+
+    # Ensure proper spacing when concatenating classes
+    # Trim to avoid leading/trailing spaces if some classes are empty, then join.
+    # However, simple concatenation with leading spaces on conditional classes is often fine.
+    # Let's adjust to ensure no double spacing if a class is empty.
+    # A more robust way is to build a list and join.
+    classes = [
+      base_classes,
+      String.trim(highlight_class), # remove leading space if present, then let join handle it
+      String.trim(pulse_class)      # remove leading space if present
+    ]
+    Enum.reject(classes, &(&1 == "")) |> Enum.join(" ")
   end
 end

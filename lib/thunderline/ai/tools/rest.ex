@@ -14,6 +14,8 @@ defmodule Thunderline.AI.Tools.Rest do
     attribute :mood_improvement, :integer, default: 0
     timestamps()
   end
+
+
   actions do
     defaults [:read, :destroy]
 
@@ -52,10 +54,12 @@ defmodule Thunderline.AI.Tools.Rest do
     end
   end
 
+
   code_interface do
     domain Thunderline.Domain
 
     define :rest, args: [:duration, :location_type]
+
     define :create
   end
 end
