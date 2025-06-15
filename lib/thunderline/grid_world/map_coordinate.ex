@@ -7,11 +7,16 @@ defmodule Thunderline.GridWorld.MapCoordinate do
   - 3D voxel coordinates (x/y/z) for virtual grid space
   - Timestamp and tick tracking for synchronization
   - Region and zone identification for PAC coordination
+
+  Enhanced with Graphmath for advanced 3D spatial operations.
   """
 
   use Ash.Resource,
     domain: Thunderline.Domain,
     data_layer: AshPostgres.DataLayer
+
+  # Import Graphmath for 3D operations
+  alias Graphmath.Vec3
 
   postgres do
     table "map_coordinates"
@@ -170,5 +175,50 @@ defmodule Thunderline.GridWorld.MapCoordinate do
     c = 2 * :math.atan2(:math.sqrt(a), :math.sqrt(1 - a))
 
     r * c
+  end
+
+  ## Enhanced 3D Grid Operations with Graphmath
+  @doc """
+  Calculate 3D distance between two MapCoordinate grid positions.
+  """
+  def grid_distance_3d(coord1, coord2) do
+    vec1 = Vec3.create(coord1.grid_x, coord1.grid_y, coord1.grid_z)
+    vec2 = Vec3.create(coord2.grid_x, coord2.grid_y, coord2.grid_z)
+    distance_vec = Vec3.subtract(vec2, vec1)
+    Vec3.length(distance_vec)
+  end
+
+  @doc """
+  Calculate movement vector from one coordinate to another in 3D grid space.
+  """
+  def movement_vector_3d(coord1, coord2) do    vec1 = Vec3.create(coord1.grid_x, coord1.grid_y, coord1.grid_z)
+    vec2 = Vec3.create(coord2.grid_x, coord2.grid_y, coord2.grid_z)
+    direction = Vec3.subtract(vec2, vec1)
+    normalized = Vec3.normalize(direction)
+    {normalized.x, normalized.y, normalized.z}
+  end
+
+  @doc """
+  Create intermediate coordinate between two points using 3D interpolation.
+  """
+  def interpolate_3d(coord1, coord2, t) when t >= 0.0 and t <= 1.0 do
+    # Interpolate grid coordinates
+    vec1 = Vec3.create(coord1.grid_x, coord1.grid_y, coord1.grid_z)
+    vec2 = Vec3.create(coord2.grid_x, coord2.grid_y, coord2.grid_z)
+    interpolated = Vec3.lerp(vec1, vec2, t)
+
+    # Also interpolate GPS coordinates
+    lat_interp = coord1.latitude + (coord2.latitude - coord1.latitude) * Decimal.new(t)
+    lng_interp = coord1.longitude + (coord2.longitude - coord1.longitude) * Decimal.new(t)
+    alt_interp = coord1.altitude + (coord2.altitude - coord1.altitude) * Decimal.new(t)
+
+    %{
+      latitude: lat_interp,
+      longitude: lng_interp,
+      altitude: alt_interp,
+      grid_x: round(interpolated.x),
+      grid_y: round(interpolated.y),
+      grid_z: round(interpolated.z)
+    }
   end
 end

@@ -3,11 +3,15 @@ defmodule Thunderline.Domain do
   Thunderline Ash Domain - Central coordination for all resources.
   """
   use Ash.Domain
+
   resources do
     # Core PAC resources
     resource Thunderline.PAC.Agent
     resource Thunderline.PAC.Zone
     resource Thunderline.PAC.Mod
+
+    # World system (PAC Gridworld)
+    resource Thunderline.World.Zone
 
     # Memory system
     resource Thunderline.Memory.MemoryNode

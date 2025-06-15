@@ -62,9 +62,10 @@ defmodule Thunderline.MixProject do
       # Vector Search & Memory
       {:pgvector, "~> 0.2.0"},
       {:nx, "~> 0.7.0"},
-      {:bumblebee, "~> 0.5.0"},      # Jido Framework (for agent workflows)
-      {:jido, github: "agentjido/jido", branch: "main"},
-      {:jido_signal, github: "agentjido/jido_signal", branch: "main"},
+      {:bumblebee, "~> 0.5.0"},
+
+      # 3D Mathematics & Spatial Operations
+      {:graphmath, "~> 2.3"},
 
       # MCP (Model Context Protocol)
       {:websock_adapter, "~> 0.5.3"},

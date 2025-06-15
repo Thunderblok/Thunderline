@@ -1,77 +1,61 @@
 defmodule Thunderline.AI.Tools.Rest do
   @moduledoc """
-  Ash AI Tool for agent rest/recovery actions.
+  Ash AI Tool for agent rest actions.
   """
 
   use Ash.Resource,
-    domain: Thunderline.Domain,
-    extensions: [AshAI.Tool]
+    domain: Thunderline.Domain
 
   attributes do
     uuid_primary_key :id
-    attribute :duration_minutes, :integer, default: 30
-    attribute :energy_recovery, :integer, default: 20
-    attribute :result_message, :string
+    attribute :duration, :integer, default: 30 # minutes
+    attribute :location, :string
+    attribute :energy_restored, :integer, default: 0
+    attribute :mood_improvement, :integer, default: 0
     timestamps()
   end
-
   actions do
     defaults [:read, :destroy]
 
     create :create do
-      accept [:duration_minutes, :energy_recovery, :result_message]
-    end
-  end
-
-  # Define the actual tool action
-  tool_action :rest do
-    description "Allow the agent to rest and recover energy"
-
-    input do
-      attribute :duration_minutes, :integer, default: 30
-      attribute :rest_quality, :string, default: "normal" # "light", "normal", "deep"
+      accept [:duration, :location, :energy_restored, :mood_improvement]
     end
 
-    output do
-      attribute :energy_gained, :integer
-      attribute :mood_improvement, :string
-      attribute :time_spent, :integer
-      attribute :result_message, :string
-    end
+    action :rest, :struct do
+      description "Rest and recover energy at a location"
 
-    execute fn %{duration_minutes: duration, rest_quality: quality}, _context ->
-      # Calculate energy recovery based on duration and quality
-      base_recovery = duration / 3  # 1 energy per 3 minutes base
-      quality_multiplier = case quality do
-        "light" -> 0.7
-        "normal" -> 1.0
-        "deep" -> 1.5
-        _ -> 1.0
+      argument :duration, :integer, default: 30 # minutes
+      argument :location_type, :string, default: "current" # "current", "shelter", "comfortable"
+
+      run fn input, _context ->
+        # Mock implementation - replace with actual rest logic
+        duration = input.arguments.duration
+        location_type = input.arguments.location_type
+
+        base_energy = duration * 2
+        multiplier = case location_type do
+          "shelter" -> 1.5
+          "comfortable" -> 2.0
+          _ -> 1.0
+        end
+
+        energy_restored = round(base_energy * multiplier)
+
+        {:ok, %{
+          energy_restored: energy_restored,
+          mood_improvement: round(energy_restored * 0.1),
+          time_passed: duration,
+          result_message: "Rested for #{duration} minutes at #{location_type} location",
+          side_effects: []
+        }}
       end
-
-      energy_gained = round(base_recovery * quality_multiplier)
-      energy_gained = min(energy_gained, 50) # Cap at 50 energy
-
-      mood_improvement = case energy_gained do
-        n when n >= 30 -> "significantly refreshed"
-        n when n >= 15 -> "moderately refreshed"
-        n when n >= 5 -> "slightly refreshed"
-        _ -> "barely rested"
-      end
-
-      result_message = "Rested for #{duration} minutes with #{quality} quality sleep, gained #{energy_gained} energy"
-
-      {:ok, %{
-        energy_gained: energy_gained,
-        mood_improvement: mood_improvement,
-        time_spent: duration,
-        result_message: result_message
-      }}
     end
   end
 
   code_interface do
     domain Thunderline.Domain
-    define :rest
+
+    define :rest, args: [:duration, :location_type]
+    define :create
   end
 end

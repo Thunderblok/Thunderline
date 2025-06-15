@@ -19,12 +19,13 @@ Thunderline is a **development platform** for creating autonomous AI agents (PAC
 - **🛠️ Tool Integration**: MCP (Model Context Protocol) for AI-environment interaction
 - **📊 Web Dashboard**: Phoenix LiveView monitoring interface (basic)
 - **🔗 Ash AI Integration**: Prompt-backed actions and Reactor pipeline (experimental)
+- **🌐 3D Spatial System**: Advanced 3D coordinate tracking with Graphmath integration
 
 ### In Development 🔧
 - **Agent reasoning flows**: Complete AI decision-making pipeline
 - **Memory integration**: Full tick-to-memory persistence  
 - **Advanced dashboard**: Real-time agent monitoring and control
-- **Spatial awareness**: 3D world position tracking for agents
+- **Spatial coordination**: 3D world position tracking and movement physics
 - **Federation**: Multi-node agent coordination
 
 ---
@@ -174,3 +175,40 @@ mix phx.server
 **⚡ Confidence Level**: HIGH - All requirements defined with clear implementation paths  
 
 ☤ **Thunderline: Building the future of autonomous AI agents** ☤
+
+## 🌐 3D Spatial System
+
+Thunderline includes a sophisticated 3D coordinate system that bridges virtual and real-world space:
+
+### Capabilities
+- **Dual Coordinate System**: GPS (lat/lng) ↔ 3D Grid (x/y/z) conversions
+- **Advanced Mathematics**: Graphmath integration for vector operations
+- **Real-time Tracking**: PAC position updates with tick synchronization
+- **Google Maps Integration**: Live visualization with grid overlays
+
+### Key Features
+```elixir
+# 3D distance calculations
+Thunderline.OKO.GridWorld.calculate_3d_distance({x1, y1, z1}, {x2, y2, z2})
+
+# Movement vector calculation
+GridWorld.calculate_movement_vector(pos1, pos2)
+
+# Position interpolation for smooth movement
+GridWorld.interpolate_position(start_pos, end_pos, 0.5)
+
+# 3D rotations around arbitrary axes
+GridWorld.rotate_position(position, axis, angle)
+
+# Spatial boundary detection
+GridWorld.within_sphere?(position, center, radius)
+```
+
+### Files
+- `lib/thunderline/oko/grid_world.ex` - Core 3D coordinate system
+- `lib/thunderline/grid_world/map_coordinate.ex` - GPS/Grid conversions
+- `lib/thunderline_web/live/map_live.ex` - Real-time map interface
+
+---
+
+## 🏗️ Architecture Overview

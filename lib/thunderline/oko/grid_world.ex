@@ -8,11 +8,16 @@ defmodule Thunderline.OKO.GridWorld do
   - PAC spatial positioning and movement
 
   PACs can roam freely in virtual 3D space while remaining tethered to real-world locations.
+  Enhanced with Graphmath for advanced 3D mathematical operations.
   """
 
   use Ash.Resource,
     domain: Thunderline.Domain,
     data_layer: AshPostgres.DataLayer
+
+  # Import Graphmath for 3D vector operations
+  alias Graphmath.Vec3
+  alias Graphmath.Mat44
 
   @derive {Jason.Encoder, only: [:id, :pac_id, :lat, :lng, :x, :y, :z, :region_id, :tick_id, :timestamp]}
 
@@ -167,5 +172,72 @@ defmodule Thunderline.OKO.GridWorld do
     c = 2 * :math.atan2(:math.sqrt(a), :math.sqrt(1 - a))
 
     6371 * c  # Earth radius in km
+  end
+
+  ## Enhanced 3D Operations with Graphmath
+
+  @doc """
+  Calculate 3D Euclidean distance between two grid positions using Graphmath.
+  """
+  def calculate_3d_distance({x1, y1, z1}, {x2, y2, z2}) do
+    vec1 = Vec3.create(x1, y1, z1)
+    vec2 = Vec3.create(x2, y2, z2)
+    distance_vec = Vec3.subtract(vec2, vec1)
+    Vec3.length(distance_vec)
+  end
+
+  @doc """
+  Calculate movement vector between two 3D positions.
+  Returns normalized direction vector.
+  """
+  def calculate_movement_vector({x1, y1, z1}, {x2, y2, z2}) do
+    vec1 = Vec3.create(x1, y1, z1)
+    vec2 = Vec3.create(x2, y2, z2)
+    direction = Vec3.subtract(vec2, vec1)
+    Vec3.normalize(direction)
+  end
+
+  @doc """
+  Rotate a 3D position around a given axis and angle (in radians).
+  """
+  def rotate_position({x, y, z}, {axis_x, axis_y, axis_z}, angle_radians) do
+    position = Vec3.create(x, y, z)
+    axis = Vec3.create(axis_x, axis_y, axis_z) |> Vec3.normalize()
+
+    # Create rotation matrix
+    rotation_matrix = Mat44.make_rotate(angle_radians, axis)
+
+    # Apply rotation
+    rotated = Mat44.transform_point3(rotation_matrix, position)
+    {rotated.x, rotated.y, rotated.z}
+  end
+
+  @doc """
+  Calculate interpolated position between two 3D points.
+  t should be between 0.0 and 1.0.
+  """
+  def interpolate_position({x1, y1, z1}, {x2, y2, z2}, t) when t >= 0.0 and t <= 1.0 do
+    vec1 = Vec3.create(x1, y1, z1)
+    vec2 = Vec3.create(x2, y2, z2)
+    interpolated = Vec3.lerp(vec1, vec2, t)
+    {interpolated.x, interpolated.y, interpolated.z}
+  end
+
+  @doc """
+  Check if a position is within a spherical region.
+  """
+  def within_sphere?({x, y, z}, {center_x, center_y, center_z}, radius) do
+    distance = calculate_3d_distance({x, y, z}, {center_x, center_y, center_z})
+    distance <= radius
+  end
+
+  @doc """
+  Calculate the cross product of two 3D vectors (useful for collision detection).
+  """
+  def cross_product({x1, y1, z1}, {x2, y2, z2}) do
+    vec1 = Vec3.create(x1, y1, z1)
+    vec2 = Vec3.create(x2, y2, z2)
+    result = Vec3.cross(vec1, vec2)
+    {result.x, result.y, result.z}
   end
 end

@@ -1,0 +1,374 @@
+defmodule Thunderline.World.Grid do
+  @moduledoc """
+  Grid Helper - 3D grid operations using Graphmath for the PAC Gridworld.
+
+  Implementation per High Command Zone System Specification.
+  """
+
+  alias Graphmath.Vec3
+  require Logger
+  @doc """
+  Convert coordinate map to Graphmath Vec3 (High Command spec).
+  """
+  def vector(coords) when is_map(coords) do
+    x = Map.get(coords, "x", 0) |> ensure_number()
+    y = Map.get(coords, "y", 0) |> ensure_number()
+    z = Map.get(coords, "z", 0) |> ensure_number()
+
+    Vec3.create(x, y, z)
+  end
+
+  def vector({x, y, z}) do
+    Vec3.create(ensure_number(x), ensure_number(y), ensure_number(z))
+  end
+  @doc """
+  Calculate 3D distance between two coordinate sets (High Command spec).
+  """
+  def distance(a, b) do
+    a_v = vector(a)
+    b_v = vector(b)
+    Vec3.length(Vec3.subtract(b_v, a_v))
+  end
+  @doc """
+  Check if a PAC can move from one coordinate to another given their movement range (High Command spec).
+  """
+  def can_move?(from, to, move_range \\ 2.0) do
+    distance(from, to) <= move_range
+  end
+
+  # Additional utility functions for 3D grid operations
+
+  @doc """
+  Get all coordinates within a given range of a center point.
+  """
+  def coordinates_in_range(center_coords, range) do
+    center_x = Map.get(center_coords, "x", 0)
+    center_y = Map.get(center_coords, "y", 0)
+    center_z = Map.get(center_coords, "z", 0)
+
+    search_radius = ceil(range + 1)
+
+    for x <- (center_x - search_radius)..(center_x + search_radius),
+        y <- (center_y - search_radius)..(center_y + search_radius),
+        z <- (center_z - search_radius)..(center_z + search_radius) do
+
+      coords = %{"x" => x, "y" => y, "z" => z}
+
+      if distance(center_coords, coords) <= range do
+        coords
+      else
+        nil
+      end
+    end
+    |> Enum.reject(&is_nil/1)
+  end
+
+  @doc """
+  Get all immediately adjacent coordinates (distance <= sqrt(3) for 3D neighbors).
+  """
+  def adjacent_coordinates(coords) do
+    coordinates_in_range(coords, 1.8)  # sqrt(3) ≈ 1.732
+    |> Enum.reject(fn c -> coords_equal?(c, coords) end)
+  end
+
+  @doc """
+  Get orthogonal neighbors only (6 directions in 3D: ±x, ±y, ±z).
+  """
+  def orthogonal_neighbors(coords) do
+    x = Map.get(coords, "x", 0)
+    y = Map.get(coords, "y", 0)
+    z = Map.get(coords, "z", 0)
+
+    [
+      %{"x" => x + 1, "y" => y, "z" => z},  # +X
+      %{"x" => x - 1, "y" => y, "z" => z},  # -X
+      %{"x" => x, "y" => y + 1, "z" => z},  # +Y
+      %{"x" => x, "y" => y - 1, "z" => z},  # -Y
+      %{"x" => x, "y" => y, "z" => z + 1},  # +Z
+      %{"x" => x, "y" => y, "z" => z - 1}   # -Z
+    ]
+  end
+
+  @doc """
+  Calculate movement vector between two coordinate sets.
+  """
+  def movement_vector(from_coords, to_coords) do
+    from_vec = vector(from_coords)
+    to_vec = vector(to_coords)
+    movement = Vec3.subtract(to_vec, from_vec)
+
+    %{
+      x: elem(movement, 0),
+      y: elem(movement, 1),
+      z: elem(movement, 2)
+    }
+  end
+
+  @doc """
+  Normalize a vector to unit length.
+  """
+  def normalize_vector(coords) do
+    vec = vector(coords)
+    normalized = Vec3.normalize(vec)
+
+    %{
+      x: elem(normalized, 0),
+      y: elem(normalized, 1),
+      z: elem(normalized, 2)
+    }
+  end
+
+  # Private helpers
+
+  defp coords_equal?(a, b) do
+    Map.get(a, "x") == Map.get(b, "x") and
+    Map.get(a, "y") == Map.get(b, "y") and
+    Map.get(a, "z") == Map.get(b, "z")
+  end
+
+  defp ensure_number(val) when is_number(val), do: val
+  defp ensure_number(val) when is_binary(val) do
+    case Integer.parse(val) do
+      {int, ""} -> int
+      _ ->
+        case Float.parse(val) do
+          {float, ""} -> float
+          _ -> 0
+        end
+    end
+  end
+  defp ensure_number(_), do: 0
+end
+
+  @doc """
+  Get all coordinates within a given range of a center point.
+  """
+  def coordinates_in_range(center_coords, range) do
+    center_vec = vector(center_coords)
+
+    # Generate a reasonable search grid around the center
+    center_x = Map.get(center_coords, "x", 0)
+    center_y = Map.get(center_coords, "y", 0)
+    center_z = Map.get(center_coords, "z", 0)
+
+    search_radius = ceil(range + 1)
+
+    for x <- (center_x - search_radius)..(center_x + search_radius),
+        y <- (center_y - search_radius)..(center_y + search_radius),
+        z <- (center_z - search_radius)..(center_z + search_radius) do
+
+      coords = %{"x" => x, "y" => y, "z" => z}
+
+      if distance(center_coords, coords) <= range do
+        coords
+      else
+        nil
+      end
+    end
+    |> Enum.reject(&is_nil/1)
+  end
+
+  @doc """
+  Get all immediately adjacent coordinates (distance <= sqrt(3) for 3D neighbors).
+  """
+  def adjacent_coordinates(coords) do
+    coordinates_in_range(coords, 1.8)  # sqrt(3) ≈ 1.732
+    |> Enum.reject(fn c -> coords_equal?(c, coords) end)
+  end
+
+  @doc """
+  Get orthogonal neighbors only (6 directions in 3D: ±x, ±y, ±z).
+  """
+  def orthogonal_neighbors(coords) do
+    x = Map.get(coords, "x", 0)
+    y = Map.get(coords, "y", 0)
+    z = Map.get(coords, "z", 0)
+
+    [
+      %{"x" => x + 1, "y" => y, "z" => z},  # +X
+      %{"x" => x - 1, "y" => y, "z" => z},  # -X
+      %{"x" => x, "y" => y + 1, "z" => z},  # +Y
+      %{"x" => x, "y" => y - 1, "z" => z},  # -Y
+      %{"x" => x, "y" => y, "z" => z + 1},  # +Z
+      %{"x" => x, "y" => y, "z" => z - 1}   # -Z
+    ]
+  end
+
+  @doc """
+  Calculate movement vector from one coordinate to another.
+  """
+  def movement_vector(from_coords, to_coords) do
+    from_vec = vector(from_coords)
+    to_vec = vector(to_coords)
+
+    movement = Vec3.subtract(to_vec, from_vec)
+
+    %{
+      x: movement.x,
+      y: movement.y,
+      z: movement.z,
+      magnitude: Vec3.length(movement)
+    }
+  end
+
+  @doc """
+  Normalize a movement vector to unit length.
+  """
+  def normalize_vector(vector_map) do
+    vec = Vec3.create(vector_map.x, vector_map.y, vector_map.z)
+    normalized = Vec3.normalize(vec)
+
+    %{
+      x: normalized.x,
+      y: normalized.y,
+      z: normalized.z,
+      magnitude: 1.0
+    }
+  end
+
+  @doc """
+  Calculate the direction from one coordinate to another as a unit vector.
+  """
+  def direction_to(from_coords, to_coords) do
+    movement = movement_vector(from_coords, to_coords)
+
+    if movement.magnitude > 0 do
+      normalize_vector(movement)
+    else
+      %{x: 0.0, y: 0.0, z: 0.0, magnitude: 0.0}
+    end
+  end
+
+  @doc """
+  Find the closest coordinate from a list to a target coordinate.
+  """
+  def closest_coordinate(target_coords, coordinate_list) do
+    coordinate_list
+    |> Enum.map(fn coords ->
+      {coords, distance(target_coords, coords)}
+    end)
+    |> Enum.min_by(fn {_coords, dist} -> dist end, fn -> {nil, :infinity} end)
+    |> case do
+      {coords, _dist} -> coords
+      _ -> nil
+    end
+  end
+
+  @doc """
+  Generate a path between two coordinates using simple 3D pathfinding.
+  This is a basic implementation - can be enhanced with A* or other algorithms.
+  """
+  def simple_path(from_coords, to_coords, max_steps \\ 20) do
+    path = [from_coords]
+    current = from_coords
+    steps = 0
+
+    generate_path_step(current, to_coords, path, steps, max_steps)
+  end
+
+  defp generate_path_step(current, target, path, steps, max_steps) do
+    if coords_equal?(current, target) or steps >= max_steps do
+      Enum.reverse(path)
+    else
+      # Move one step closer to target
+      direction = direction_to(current, target)
+
+      next_coords = %{
+        "x" => round(Map.get(current, "x", 0) + direction.x),
+        "y" => round(Map.get(current, "y", 0) + direction.y),
+        "z" => round(Map.get(current, "z", 0) + direction.z)
+      }
+
+      new_path = [next_coords | path]
+      generate_path_step(next_coords, target, new_path, steps + 1, max_steps)
+    end
+  end
+
+  @doc """
+  Check if two coordinate maps represent the same position.
+  """
+  def coords_equal?(coords1, coords2) do
+    Map.get(coords1, "x", 0) == Map.get(coords2, "x", 0) and
+    Map.get(coords1, "y", 0) == Map.get(coords2, "y", 0) and
+    Map.get(coords1, "z", 0) == Map.get(coords2, "z", 0)
+  end
+
+  @doc """
+  Convert Vec3 back to coordinate map.
+  """
+  def vec3_to_coords(vec3) do
+    %{
+      "x" => round(vec3.x),
+      "y" => round(vec3.y),
+      "z" => round(vec3.z)
+    }
+  end
+
+  @doc """
+  Interpolate between two coordinates by a factor t (0.0 to 1.0).
+  """
+  def interpolate_coords(from_coords, to_coords, t) when t >= 0.0 and t <= 1.0 do
+    from_vec = vector(from_coords)
+    to_vec = vector(to_coords)
+
+    interpolated = Vec3.lerp(from_vec, to_vec, t)
+    vec3_to_coords(interpolated)
+  end
+
+  @doc """
+  Generate a random coordinate within a sphere of given radius around a center.
+  """
+  def random_coordinate_in_sphere(center_coords, radius) do
+    # Generate random point in sphere using rejection sampling
+    max_attempts = 100
+    generate_random_in_sphere(center_coords, radius, max_attempts)
+  end
+
+  defp generate_random_in_sphere(center_coords, radius, attempts_left) do
+    if attempts_left <= 0 do
+      center_coords  # Fallback to center if we can't generate
+    else
+      # Generate random point in cube and check if it's in sphere
+      x_offset = (:rand.uniform() - 0.5) * radius * 2
+      y_offset = (:rand.uniform() - 0.5) * radius * 2
+      z_offset = (:rand.uniform() - 0.5) * radius * 2
+
+      candidate = %{
+        "x" => round(Map.get(center_coords, "x", 0) + x_offset),
+        "y" => round(Map.get(center_coords, "y", 0) + y_offset),
+        "z" => round(Map.get(center_coords, "z", 0) + z_offset)
+      }
+
+      if distance(center_coords, candidate) <= radius do
+        candidate
+      else
+        generate_random_in_sphere(center_coords, radius, attempts_left - 1)
+      end
+    end
+  end
+
+  @doc """
+  Calculate the volume of a 3D region defined by min and max coordinates.
+  """
+  def region_volume(min_coords, max_coords) do
+    width = Map.get(max_coords, "x", 0) - Map.get(min_coords, "x", 0) + 1
+    height = Map.get(max_coords, "y", 0) - Map.get(min_coords, "y", 0) + 1
+    depth = Map.get(max_coords, "z", 0) - Map.get(min_coords, "z", 0) + 1
+
+    max(0, width * height * depth)
+  end
+
+  # Helper function to ensure numeric values
+  defp ensure_number(val) when is_number(val), do: val
+  defp ensure_number(val) when is_binary(val) do
+    case Integer.parse(val) do
+      {num, ""} -> num
+      _ ->
+        case Float.parse(val) do
+          {num, ""} -> num
+          _ -> 0
+        end
+    end
+  end
+  defp ensure_number(_), do: 0
+end

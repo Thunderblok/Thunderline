@@ -11,7 +11,6 @@ defmodule Thunderline.Supervisor do
   def start_link(init_arg) do
     Supervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
   end
-
   @impl true
   def init(_init_arg) do
     children = [
@@ -29,6 +28,9 @@ defmodule Thunderline.Supervisor do
 
       # Tick orchestrator
       Thunderline.Tick.Orchestrator,
+
+      # Zone orchestrator (global zone tock updates)
+      Thunderline.World.ZoneOrchestrator,
 
       # Narrative engine
       Thunderline.Narrative.Engine
