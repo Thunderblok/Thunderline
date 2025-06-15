@@ -99,7 +99,9 @@ defmodule Thunderline.PAC.Agent do
         "max_tokens" => 1000,
         "system_prompt" => nil
       }
-    end    # Memory and context
+    end
+
+    # Memory and context
     attribute :memory_context, :map do
       default %{
         "short_term" => [],
@@ -115,7 +117,8 @@ defmodule Thunderline.PAC.Agent do
 
     # Movement properties
     attribute :movement_range, :decimal do
-      default Decimal.new("2.0")  # Can move up to 2 grid units per tick
+      # Can move up to 2 grid units per tick
+      default Decimal.new("2.0")
     end
 
     attribute :last_move_tick, :integer do
@@ -124,6 +127,7 @@ defmodule Thunderline.PAC.Agent do
 
     timestamps()
   end
+
   relationships do
     belongs_to :zone, Zone do
       allow_nil? false
@@ -138,6 +142,7 @@ defmodule Thunderline.PAC.Agent do
       destination_attribute :pac_agent_id
     end
   end
+
   actions do
     defaults [:read, :destroy]
 
@@ -158,12 +163,24 @@ defmodule Thunderline.PAC.Agent do
           "long_term_ids" => [],
           "active_memories" => 10
         })
-        |> Ash.Changeset.change_attribute(:current_zone_id, Ash.Changeset.get_attribute(changeset, :zone_id))
+        |> Ash.Changeset.change_attribute(
+          :current_zone_id,
+          Ash.Changeset.get_attribute(changeset, :zone_id)
+        )
       end
     end
 
     update :update do
-      accept [:description, :stats, :traits, :state, :ai_config, :memory_context, :current_coords, :movement_range]
+      accept [
+        :description,
+        :stats,
+        :traits,
+        :state,
+        :ai_config,
+        :memory_context,
+        :current_coords,
+        :movement_range
+      ]
     end
 
     # Movement action - move PAC to new coordinates/zone
@@ -182,10 +199,16 @@ defmodule Thunderline.PAC.Agent do
 
         if Thunderline.World.Grid.can_move?(current_coords, target_coords, movement_range) do
           # Find target zone at these coordinates
-          case Thunderline.Domain.read_one!(Thunderline.World.Zone, action: :by_coords, coords: target_coords) do
+          case Thunderline.Domain.read_one!(Thunderline.World.Zone,
+                 action: :by_coords,
+                 coords: target_coords
+               ) do
             nil ->
               # Could create zone on-demand here, for now just reject
-              Ash.Changeset.add_error(changeset, field: :target_coords, message: "No zone exists at target coordinates")
+              Ash.Changeset.add_error(changeset,
+                field: :target_coords,
+                message: "No zone exists at target coordinates"
+              )
 
             target_zone ->
               changeset
@@ -194,7 +217,10 @@ defmodule Thunderline.PAC.Agent do
               |> Ash.Changeset.change_attribute(:last_move_tick, tick_id)
           end
         else
-          Ash.Changeset.add_error(changeset, field: :target_coords, message: "Target coordinates out of movement range")
+          Ash.Changeset.add_error(changeset,
+            field: :target_coords,
+            message: "Target coordinates out of movement range"
+          )
         end
       end
     end
@@ -213,15 +239,17 @@ defmodule Thunderline.PAC.Agent do
         new_stats = Map.put(current_stats, "energy", new_energy)
 
         # Update activity based on energy and mood
-        new_activity = cond do
-          new_energy > 80 -> "active"
-          new_energy > 40 -> "moderate"
-          true -> "resting"
-        end
+        new_activity =
+          cond do
+            new_energy > 80 -> "active"
+            new_energy > 40 -> "moderate"
+            true -> "resting"
+          end
 
         new_state = Map.put(current_state, "activity", new_activity)
 
-        changeset        |> Ash.Changeset.change_attribute(:stats, new_stats)
+        changeset
+        |> Ash.Changeset.change_attribute(:stats, new_stats)
         |> Ash.Changeset.change_attribute(:state, new_state)
       end
     end
@@ -246,7 +274,8 @@ defmodule Thunderline.PAC.Agent do
     end
   end
 
-  validations do    validate compare(:name, greater_than: 0, message: "Name cannot be empty") do
+  validations do
+    validate compare(:name, greater_than: 0, message: "Name cannot be empty") do
       where changing(:name)
     end
   end

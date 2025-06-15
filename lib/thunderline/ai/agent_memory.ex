@@ -34,7 +34,9 @@ defmodule Thunderline.AI.AgentMemory do
 
     create :create do
       accept [:context, :decision, :action_result, :agent_id, :tick_id]
-    end    # Simplified action for memory formation - using mock implementation for now
+    end
+
+    # Simplified action for memory formation - using mock implementation for now
     action :form_memory, :struct do
       description "Form a memory from the agent's experience"
 
@@ -46,14 +48,16 @@ defmodule Thunderline.AI.AgentMemory do
 
       run fn input, _context ->
         # Mock implementation - replace with actual AI prompt later
-        {:ok, %{
-          memory_content: "Completed action #{input.arguments.decision["chosen_action"]} successfully",
-          memory_type: "experience",
-          importance_score: Decimal.new("0.6"),
-          emotional_weight: Decimal.new("0.5"),
-          tags: ["action", "experience"],
-          connections: []
-        }}
+        {:ok,
+         %{
+           memory_content:
+             "Completed action #{input.arguments.decision["chosen_action"]} successfully",
+           memory_type: "experience",
+           importance_score: Decimal.new("0.6"),
+           emotional_weight: Decimal.new("0.5"),
+           tags: ["action", "experience"],
+           connections: []
+         }}
       end
     end
   end

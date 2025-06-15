@@ -8,13 +8,13 @@ defmodule Thunderline.AI.Tools.Rest do
 
   attributes do
     uuid_primary_key :id
-    attribute :duration, :integer, default: 30 # minutes
+    # minutes
+    attribute :duration, :integer, default: 30
     attribute :location, :string
     attribute :energy_restored, :integer, default: 0
     attribute :mood_improvement, :integer, default: 0
     timestamps()
   end
-
 
   actions do
     defaults [:read, :destroy]
@@ -26,8 +26,10 @@ defmodule Thunderline.AI.Tools.Rest do
     action :rest, :struct do
       description "Rest and recover energy at a location"
 
-      argument :duration, :integer, default: 30 # minutes
-      argument :location_type, :string, default: "current" # "current", "shelter", "comfortable"
+      # minutes
+      argument :duration, :integer, default: 30
+      # "current", "shelter", "comfortable"
+      argument :location_type, :string, default: "current"
 
       run fn input, _context ->
         # Mock implementation - replace with actual rest logic
@@ -35,25 +37,27 @@ defmodule Thunderline.AI.Tools.Rest do
         location_type = input.arguments.location_type
 
         base_energy = duration * 2
-        multiplier = case location_type do
-          "shelter" -> 1.5
-          "comfortable" -> 2.0
-          _ -> 1.0
-        end
+
+        multiplier =
+          case location_type do
+            "shelter" -> 1.5
+            "comfortable" -> 2.0
+            _ -> 1.0
+          end
 
         energy_restored = round(base_energy * multiplier)
 
-        {:ok, %{
-          energy_restored: energy_restored,
-          mood_improvement: round(energy_restored * 0.1),
-          time_passed: duration,
-          result_message: "Rested for #{duration} minutes at #{location_type} location",
-          side_effects: []
-        }}
+        {:ok,
+         %{
+           energy_restored: energy_restored,
+           mood_improvement: round(energy_restored * 0.1),
+           time_passed: duration,
+           result_message: "Rested for #{duration} minutes at #{location_type} location",
+           side_effects: []
+         }}
       end
     end
   end
-
 
   code_interface do
     domain Thunderline.Domain

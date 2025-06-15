@@ -75,9 +75,15 @@ defmodule Thunderline.Agents.AIProvider do
     federation = Map.get(context, :federation_context, %{})
 
     # Score actions with federation context
-    scored_actions = score_actions_with_federation(
-      available_actions, assessment, goals, stats, traits, federation
-    )
+    scored_actions =
+      score_actions_with_federation(
+        available_actions,
+        assessment,
+        goals,
+        stats,
+        traits,
+        federation
+      )
 
     chosen_action = select_best_action(scored_actions)
 
@@ -216,26 +222,31 @@ defmodule Thunderline.Agents.AIProvider do
     observations = []
 
     # Energy observations
-    observations = case stats["energy"] do
-      energy when energy > 80 -> ["I feel energetic and ready for action" | observations]
-      energy when energy > 50 -> ["I have moderate energy levels" | observations]
-      energy when energy > 20 -> ["I'm feeling a bit tired" | observations]
-      _ -> ["I'm exhausted and need rest" | observations]
-    end
+    observations =
+      case stats["energy"] do
+        energy when energy > 80 -> ["I feel energetic and ready for action" | observations]
+        energy when energy > 50 -> ["I have moderate energy levels" | observations]
+        energy when energy > 20 -> ["I'm feeling a bit tired" | observations]
+        _ -> ["I'm exhausted and need rest" | observations]
+      end
 
     # Trait-based observations
-    observations = if "curious" in traits do
-      ["I'm eager to explore and learn new things" | observations]
-    else
-      observations
-    end
+    observations =
+      if "curious" in traits do
+        ["I'm eager to explore and learn new things" | observations]
+      else
+        observations
+      end
 
     # Environment observations
-    observations = case Map.get(environment, :zone_pacs, []) do
-      [] -> ["I'm alone in this space" | observations]
-      others when length(others) > 0 ->
-        ["There are #{length(others)} other agents here" | observations]
-    end
+    observations =
+      case Map.get(environment, :zone_pacs, []) do
+        [] ->
+          ["I'm alone in this space" | observations]
+
+        others when length(others) > 0 ->
+          ["There are #{length(others)} other agents here" | observations]
+      end
 
     observations
   end
@@ -249,17 +260,19 @@ defmodule Thunderline.Agents.AIProvider do
 
       observations = ["I'm part of a federated network" | observations]
 
-      observations = if peer_count > 0 do
-        ["I can interact with #{peer_count} other supervisor nodes" | observations]
-      else
-        observations
-      end
+      observations =
+        if peer_count > 0 do
+          ["I can interact with #{peer_count} other supervisor nodes" | observations]
+        else
+          observations
+        end
 
-      observations = case Map.get(node_load, :active_agents, 0) do
-        count when count > 50 -> ["This node is quite busy with many agents" | observations]
-        count when count > 10 -> ["This node has moderate activity" | observations]
-        _ -> ["This node is relatively quiet" | observations]
-      end
+      observations =
+        case Map.get(node_load, :active_agents, 0) do
+          count when count > 50 -> ["This node is quite busy with many agents" | observations]
+          count when count > 10 -> ["This node has moderate activity" | observations]
+          _ -> ["This node is relatively quiet" | observations]
+        end
 
       observations
     else
@@ -271,29 +284,33 @@ defmodule Thunderline.Agents.AIProvider do
     opportunities = []
 
     # Social opportunities
-    opportunities = case Map.get(environment, :zone_pacs, []) do
-      [] -> opportunities
-      others -> ["Collaborate with #{length(others)} other agents" | opportunities]
-    end
+    opportunities =
+      case Map.get(environment, :zone_pacs, []) do
+        [] -> opportunities
+        others -> ["Collaborate with #{length(others)} other agents" | opportunities]
+      end
 
     # Stat-based opportunities
-    opportunities = if stats["creativity"] > 70 do
-      ["Express creativity through innovative actions" | opportunities]
-    else
-      opportunities
-    end
-
-    # Federation opportunities
-    opportunities = if Map.get(federation, :federation_enabled, false) do
-      peer_count = length(Map.get(federation, :peer_nodes, []))
-      if peer_count > 0 do
-        ["Explore other supervisor nodes and their unique capabilities" | opportunities]
+    opportunities =
+      if stats["creativity"] > 70 do
+        ["Express creativity through innovative actions" | opportunities]
       else
         opportunities
       end
-    else
-      opportunities
-    end
+
+    # Federation opportunities
+    opportunities =
+      if Map.get(federation, :federation_enabled, false) do
+        peer_count = length(Map.get(federation, :peer_nodes, []))
+
+        if peer_count > 0 do
+          ["Explore other supervisor nodes and their unique capabilities" | opportunities]
+        else
+          opportunities
+        end
+      else
+        opportunities
+      end
 
     opportunities
   end
@@ -302,23 +319,26 @@ defmodule Thunderline.Agents.AIProvider do
     threats = []
 
     # Energy-based threats
-    threats = if stats["energy"] < 20 do
-      ["Risk of exhaustion if I don't rest soon" | threats]
-    else
-      threats
-    end
-
-    # Federation threats
-    threats = if Map.get(federation, :federation_enabled, false) do
-      node_load = Map.get(federation, :node_load, %{})
-      if Map.get(node_load, :cpu, 0) > 0.9 do
-        ["High node load may affect my performance" | threats]
+    threats =
+      if stats["energy"] < 20 do
+        ["Risk of exhaustion if I don't rest soon" | threats]
       else
         threats
       end
-    else
-      threats
-    end
+
+    # Federation threats
+    threats =
+      if Map.get(federation, :federation_enabled, false) do
+        node_load = Map.get(federation, :node_load, %{})
+
+        if Map.get(node_load, :cpu, 0) > 0.9 do
+          ["High node load may affect my performance" | threats]
+        else
+          threats
+        end
+      else
+        threats
+      end
 
     threats
   end
@@ -340,18 +360,20 @@ defmodule Thunderline.Agents.AIProvider do
     priorities = []
 
     # Energy priority
-    priorities = if stats["energy"] < 30 do
-      ["Restore energy through rest" | priorities]
-    else
-      priorities
-    end
+    priorities =
+      if stats["energy"] < 30 do
+        ["Restore energy through rest" | priorities]
+      else
+        priorities
+      end
 
     # Trait-based priorities
-    priorities = if "social" in traits and Map.get(federation, :federation_enabled, false) do
-      ["Connect and collaborate across the federation" | priorities]
-    else
-      priorities
-    end
+    priorities =
+      if "social" in traits and Map.get(federation, :federation_enabled, false) do
+        ["Connect and collaborate across the federation" | priorities]
+      else
+        priorities
+      end
 
     # Default priorities
     if Enum.empty?(priorities) do
@@ -384,28 +406,30 @@ defmodule Thunderline.Agents.AIProvider do
     case action do
       "rest" ->
         energy_factor = (100 - stats["energy"]) / 100.0
-        0.5 + (energy_factor * 0.4)
+        0.5 + energy_factor * 0.4
 
       "think" ->
         intelligence_factor = stats["intelligence"] / 100.0
-        0.4 + (intelligence_factor * 0.3)
+        0.4 + intelligence_factor * 0.3
 
       "explore" ->
         curiosity_factor = stats["curiosity"] / 100.0
         energy_factor = stats["energy"] / 100.0
-        0.3 + (curiosity_factor * 0.4) + (energy_factor * 0.2)
+        0.3 + curiosity_factor * 0.4 + energy_factor * 0.2
 
       "interact" ->
         social_factor = stats["social"] / 100.0
         social_trait_bonus = if "social" in traits, do: 0.2, else: 0.0
-        0.3 + (social_factor * 0.4) + social_trait_bonus
+        0.3 + social_factor * 0.4 + social_trait_bonus
 
       "create" ->
         creativity_factor = stats["creativity"] / 100.0
         creative_trait_bonus = if "creative" in traits, do: 0.2, else: 0.0
-        0.2 + (creativity_factor * 0.5) + creative_trait_bonus
+        0.2 + creativity_factor * 0.5 + creative_trait_bonus
 
-      _ -> 0.3 # Default score for unknown actions
+      # Default score for unknown actions
+      _ ->
+        0.3
     end
   end
 
@@ -415,25 +439,31 @@ defmodule Thunderline.Agents.AIProvider do
       node_capabilities = Map.get(federation, :node_capabilities, [])
 
       case action do
-        "interact" when peer_count > 0 -> 1.3 # Boost social actions in federation
-        "explore" when length(node_capabilities) > 0 -> 1.2 # Boost exploration with capabilities
-        "migrate" when peer_count > 0 -> 1.4 # Boost migration when peers available
-        _ -> 1.0 # Neutral impact
+        # Boost social actions in federation
+        "interact" when peer_count > 0 -> 1.3
+        # Boost exploration with capabilities
+        "explore" when length(node_capabilities) > 0 -> 1.2
+        # Boost migration when peers available
+        "migrate" when peer_count > 0 -> 1.4
+        # Neutral impact
+        _ -> 1.0
       end
     else
-      1.0 # No federation impact
+      # No federation impact
+      1.0
     end
   end
 
   defp build_action_reasoning(action, _base_score, federation_modifier, federation) do
-    base_reason = case action do
-      "rest" -> "Need to restore energy levels"
-      "think" -> "Time for reflection and planning"
-      "explore" -> "Curiosity drives me to discover new things"
-      "interact" -> "Social connection is important"
-      "create" -> "I want to express my creativity"
-      _ -> "This seems like a reasonable choice"
-    end
+    base_reason =
+      case action do
+        "rest" -> "Need to restore energy levels"
+        "think" -> "Time for reflection and planning"
+        "explore" -> "Curiosity drives me to discover new things"
+        "interact" -> "Social connection is important"
+        "create" -> "I want to express my creativity"
+        _ -> "This seems like a reasonable choice"
+      end
 
     if federation_modifier > 1.0 and Map.get(federation, :federation_enabled, false) do
       "#{base_reason}. Federation context enhances this choice."
@@ -443,14 +473,15 @@ defmodule Thunderline.Agents.AIProvider do
   end
 
   defp predict_outcome(action, _stats, federation) do
-    base_outcome = case action do
-      "rest" -> "Increased energy and well-being"
-      "think" -> "Greater clarity and insight"
-      "explore" -> "New discoveries and experiences"
-      "interact" -> "Social connections and collaboration"
-      "create" -> "New creative expressions"
-      _ -> "Unknown outcome"
-    end
+    base_outcome =
+      case action do
+        "rest" -> "Increased energy and well-being"
+        "think" -> "Greater clarity and insight"
+        "explore" -> "New discoveries and experiences"
+        "interact" -> "Social connections and collaboration"
+        "create" -> "New creative expressions"
+        _ -> "Unknown outcome"
+      end
 
     if Map.get(federation, :federation_enabled, false) do
       "#{base_outcome} with potential for cross-node benefits"
@@ -465,7 +496,7 @@ defmodule Thunderline.Agents.AIProvider do
     base_confidence = min(score, 1.0)
 
     # Boost confidence based on intelligence
-    final_confidence = base_confidence + (intelligence_factor * 0.2)
+    final_confidence = base_confidence + intelligence_factor * 0.2
     min(final_confidence, 1.0)
   end
 
@@ -513,57 +544,66 @@ defmodule Thunderline.Agents.AIProvider do
     insights = []
 
     # Action-specific insights
-    insights = case action do
-      "interact" -> ["Social connections require effort and empathy" | insights]
-      "explore" -> ["Exploration leads to growth and discovery" | insights]
-      "create" -> ["Creativity requires both inspiration and persistence" | insights]
-      _ -> insights
-    end
+    insights =
+      case action do
+        "interact" -> ["Social connections require effort and empathy" | insights]
+        "explore" -> ["Exploration leads to growth and discovery" | insights]
+        "create" -> ["Creativity requires both inspiration and persistence" | insights]
+        _ -> insights
+      end
 
     # Success/failure insights
-    insights = if Map.get(result, "success", false) do
-      ["This approach was effective and should be remembered" | insights]
-    else
-      ["This approach didn't work - need to try differently next time" | insights]
-    end
+    insights =
+      if Map.get(result, "success", false) do
+        ["This approach was effective and should be remembered" | insights]
+      else
+        ["This approach didn't work - need to try differently next time" | insights]
+      end
 
     # Federation insights
-    insights = if Map.get(federation, :federation_enabled, false) do
-      ["Federation context influences outcomes and opportunities" | insights]
-    else
-      insights
-    end
+    insights =
+      if Map.get(federation, :federation_enabled, false) do
+        ["Federation context influences outcomes and opportunities" | insights]
+      else
+        insights
+      end
 
     insights
   end
 
   defp calculate_importance(result, memory_type) do
-    base_importance = case memory_type do
-      "social_success" -> 0.7
-      "social_failure" -> 0.6
-      "discovery" -> 0.8
-      "creative_achievement" -> 0.9
-      "failed_exploration" -> 0.4
-      "creative_block" -> 0.5
-      "success" -> 0.6
-      "failure" -> 0.5
-    end
+    base_importance =
+      case memory_type do
+        "social_success" -> 0.7
+        "social_failure" -> 0.6
+        "discovery" -> 0.8
+        "creative_achievement" -> 0.9
+        "failed_exploration" -> 0.4
+        "creative_block" -> 0.5
+        "success" -> 0.6
+        "failure" -> 0.5
+      end
 
     # Adjust based on result intensity
     intensity = Map.get(result, "intensity", 0.5)
-    base_importance + (intensity * 0.2)
+    base_importance + intensity * 0.2
   end
 
   defp assess_federation_relevance(action, _result, federation) do
     if Map.get(federation, :federation_enabled, false) do
       case action do
-        "interact" -> 0.8 # High federation relevance
-        "explore" -> 0.6 # Medium federation relevance
-        "migrate" -> 0.9 # Very high federation relevance
-        _ -> 0.3 # Low federation relevance
+        # High federation relevance
+        "interact" -> 0.8
+        # Medium federation relevance
+        "explore" -> 0.6
+        # Very high federation relevance
+        "migrate" -> 0.9
+        # Low federation relevance
+        _ -> 0.3
       end
     else
-      0.0 # No federation relevance
+      # No federation relevance
+      0.0
     end
   end
 
@@ -604,32 +644,36 @@ defmodule Thunderline.Agents.AIProvider do
 
     {:ok, response}
   end
+
   defp infer_emotional_state(stats, traits) do
     energy = Map.get(stats, "energy", 50)
     focus = Map.get(stats, "focus", 50)
     stress = Map.get(stats, "stress", 0)
 
-    mood_traits = Enum.filter(traits, fn {trait, _} ->
-      trait in ["optimism", "resilience", "anxiety", "confidence"]
-    end)
+    mood_traits =
+      Enum.filter(traits, fn {trait, _} ->
+        trait in ["optimism", "resilience", "anxiety", "confidence"]
+      end)
 
-    base_mood = cond do
-      energy > 70 and stress < 30 -> "energetic"
-      energy < 30 -> "tired"
-      stress > 70 -> "stressed"
-      focus > 70 -> "focused"
-      true -> "neutral"
-    end
+    base_mood =
+      cond do
+        energy > 70 and stress < 30 -> "energetic"
+        energy < 30 -> "tired"
+        stress > 70 -> "stressed"
+        focus > 70 -> "focused"
+        true -> "neutral"
+      end
 
     # Modify base mood based on personality traits
-    modified_mood = Enum.reduce(mood_traits, base_mood, fn {trait, value}, mood ->
-      case {trait, value} do
-        {"optimism", val} when val > 70 and mood == "neutral" -> "optimistic"
-        {"anxiety", val} when val > 60 -> "anxious"
-        {"confidence", val} when val > 80 -> "confident"
-        _ -> mood
-      end
-    end)
+    modified_mood =
+      Enum.reduce(mood_traits, base_mood, fn {trait, value}, mood ->
+        case {trait, value} do
+          {"optimism", val} when val > 70 and mood == "neutral" -> "optimistic"
+          {"anxiety", val} when val > 60 -> "anxious"
+          {"confidence", val} when val > 80 -> "confident"
+          _ -> mood
+        end
+      end)
 
     %{
       "primary_mood" => modified_mood,
@@ -640,7 +684,8 @@ defmodule Thunderline.Agents.AIProvider do
   end
 
   defp build_memory_content(action, result, insights) do
-    success_text = if Map.get(result, "success", false), do: "successfully", else: "unsuccessfully"
+    success_text =
+      if Map.get(result, "success", false), do: "successfully", else: "unsuccessfully"
 
     content = "I #{success_text} performed #{action}."
 

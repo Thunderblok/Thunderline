@@ -53,9 +53,10 @@ defmodule Thunderline.Integration.MemoryTickTest do
       assert length(stored_memories) > 0
 
       # Verify memory content and metadata
-      decision_memory = Enum.find(stored_memories, fn memory ->
-        String.contains?(memory.content, "decided")
-      end)
+      decision_memory =
+        Enum.find(stored_memories, fn memory ->
+          String.contains?(memory.content, "decided")
+        end)
 
       assert decision_memory != nil
       assert "decision" in decision_memory.tags
@@ -92,12 +93,16 @@ defmodule Thunderline.Integration.MemoryTickTest do
       {:ok, agent} = Agent.create(agent_attrs, domain: Thunderline.Domain)
 
       # Store specific memories for testing
-      {:ok, _mem1} = MemoryManager.store(agent.id, "I created a beautiful painting",
-                                        tags: ["creation", "art"])
-      {:ok, _mem2} = MemoryManager.store(agent.id, "I explored the northern woods",
-                                        tags: ["exploration", "nature"])
-      {:ok, _mem3} = MemoryManager.store(agent.id, "I made a new friend today",
-                                        tags: ["social", "friendship"])
+      {:ok, _mem1} =
+        MemoryManager.store(agent.id, "I created a beautiful painting", tags: ["creation", "art"])
+
+      {:ok, _mem2} =
+        MemoryManager.store(agent.id, "I explored the northern woods",
+          tags: ["exploration", "nature"]
+        )
+
+      {:ok, _mem3} =
+        MemoryManager.store(agent.id, "I made a new friend today", tags: ["social", "friendship"])
 
       # Test semantic search
       {:ok, art_memories} = MemoryManager.search(agent.id, "creative art painting", limit: 5)
@@ -138,8 +143,16 @@ defmodule Thunderline.Integration.MemoryTickTest do
 
       # Run complete tick cycle via TickWorker
       job_args = %{"agent_id" => agent.id, "tick_number" => 1}
-      fake_job = %Oban.Job{args: job_args, id: 1, queue: "tick", worker: "TickWorker",
-                           attempt: 1, max_attempts: 3, scheduled_at: DateTime.utc_now()}
+
+      fake_job = %Oban.Job{
+        args: job_args,
+        id: 1,
+        queue: "tick",
+        worker: "TickWorker",
+        attempt: 1,
+        max_attempts: 3,
+        scheduled_at: DateTime.utc_now()
+      }
 
       # Execute tick worker
       result = TickWorker.perform(fake_job)
@@ -198,6 +211,7 @@ defmodule Thunderline.Integration.MemoryTickTest do
       case result do
         {:ok, _tick_result} ->
           IO.puts("✅ Tick completed successfully with memory storage")
+
         {:error, reason} ->
           IO.puts("⚠️  Tick failed: #{inspect(reason)}")
           # Verify it's not a memory-related failure that breaks the whole system

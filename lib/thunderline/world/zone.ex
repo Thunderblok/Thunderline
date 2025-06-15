@@ -19,7 +19,6 @@ defmodule Thunderline.World.Zone do
   # Import Graphmath for 3D operations
   alias Graphmath.Vec3
 
-
   postgres do
     table "zones"
     repo Thunderline.Repo
@@ -30,7 +29,6 @@ defmodule Thunderline.World.Zone do
       index [:last_updated_at]
     end
   end
-
 
   json_api do
     type "zone"
@@ -45,7 +43,6 @@ defmodule Thunderline.World.Zone do
     end
   end
 
-
   attributes do
     uuid_primary_key :id
 
@@ -59,11 +56,11 @@ defmodule Thunderline.World.Zone do
     # Environmental properties per High Command spec
     attribute :entropy, :float, default: 0.0
     attribute :last_updated_at, :utc_datetime
-    attribute :temperature, :float, default: 0.0  # optional: for heat/diffusion
+    # optional: for heat/diffusion
+    attribute :temperature, :float, default: 0.0
 
     timestamps()
   end
-
 
   relationships do
     # PACs currently in this zone
@@ -71,7 +68,6 @@ defmodule Thunderline.World.Zone do
       destination_attribute :current_zone_id
     end
   end
-
 
   actions do
     defaults [:read, :destroy]
@@ -129,7 +125,6 @@ defmodule Thunderline.World.Zone do
     end
   end
 
-
   calculations do
     calculate :occupancy_count, :integer do
       calculation fn records, _context ->
@@ -148,18 +143,19 @@ defmodule Thunderline.World.Zone do
         records
         |> Enum.map(fn record ->
           coords = record.coords || %{}
+
           vector = %{
             x: Map.get(coords, "x", 0),
             y: Map.get(coords, "y", 0),
             z: Map.get(coords, "z", 0)
           }
+
           {record, vector}
         end)
         |> Map.new()
       end
     end
   end
-
 
   validations do
     validate fn changeset, _context ->
@@ -168,6 +164,7 @@ defmodule Thunderline.World.Zone do
       case coords do
         %{"x" => x, "y" => y, "z" => z} when is_integer(x) and is_integer(y) and is_integer(z) ->
           []
+
         _ ->
           [{:error, field: :coords, message: "Coords must contain integer x, y, z values"}]
       end
@@ -175,7 +172,6 @@ defmodule Thunderline.World.Zone do
 
     validate compare(:entropy, greater_than_or_equal_to: 0.0)
   end
-
 
   code_interface do
     domain Thunderline.Domain

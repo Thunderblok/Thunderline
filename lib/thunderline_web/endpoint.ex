@@ -10,8 +10,12 @@ defmodule ThunderlineWeb.Endpoint do
     signing_salt: "kBKjkGGw",
     same_site: "Lax"
   ]
-
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
+
+  # Zone coordination WebSocket endpoint
+  socket "/socket", ThunderlineWeb.UserSocket,
+    websocket: true,
+    longpoll: false
 
   # MCP WebSocket endpoint
   socket "/mcp", Thunderline.MCP.Socket, websocket: true, longpoll: false

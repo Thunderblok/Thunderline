@@ -122,15 +122,15 @@ defmodule Thunderline.Tick.Broadway do
   defp process_agent_tick(agent_id, context) do
     with {:ok, agent} <- Agent.get_by_id(agent_id, load: [:zone, :mods]),
          {:ok, result} <- Pipeline.execute_tick(agent, context) do
-
       # Update agent state with results
       state_changes = Map.get(result, :state_changes, %{})
       stat_changes = Map.get(result, :stat_changes, %{})
 
       # Merge changes
-      updates = %{}
-      |> maybe_put(:state, merge_state_changes(agent.state, state_changes))
-      |> maybe_put(:stats, merge_stat_changes(agent.stats, stat_changes))
+      updates =
+        %{}
+        |> maybe_put(:state, merge_state_changes(agent.state, state_changes))
+        |> maybe_put(:stats, merge_stat_changes(agent.stats, stat_changes))
 
       # Apply updates if any
       case updates do
@@ -156,7 +156,8 @@ defmodule Thunderline.Tick.Broadway do
     Map.merge(current_stats, changes, fn _key, current, change ->
       case {current, change} do
         {curr, delta} when is_number(curr) and is_number(delta) ->
-          max(0, min(100, curr + delta))  # Keep stats in 0-100 range
+          # Keep stats in 0-100 range
+          max(0, min(100, curr + delta))
 
         {_curr, new_value} ->
           new_value
@@ -177,7 +178,10 @@ defmodule Thunderline.Tick.Broadway do
 
   # Simple acknowledger (messages are already processed)
   def ack(:ack_id, successful, failed) do
-    Logger.debug("Acknowledged #{length(successful)} successful, #{length(failed)} failed messages")
+    Logger.debug(
+      "Acknowledged #{length(successful)} successful, #{length(failed)} failed messages"
+    )
+
     :ok
   end
 end

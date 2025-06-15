@@ -42,16 +42,25 @@ defmodule Thunderline.Memory.MemoryEdge do
     # Relationship type
     attribute :relationship, :atom do
       allow_nil? false
+
       constraints one_of: [
-        :causal,         # A caused B
-        :temporal,       # A happened before/after B
-        :spatial,        # A is near/at B
-        :conceptual,     # A is related to B conceptually
-        :emotional,      # A triggered emotion about B
-        :associative,    # A reminds of B
-        :hierarchical,   # A is part of/contains B
-        :contradicts     # A contradicts B
-      ]
+                    # A caused B
+                    :causal,
+                    # A happened before/after B
+                    :temporal,
+                    # A is near/at B
+                    :spatial,
+                    # A is related to B conceptually
+                    :conceptual,
+                    # A triggered emotion about B
+                    :emotional,
+                    # A reminds of B
+                    :associative,
+                    # A is part of/contains B
+                    :hierarchical,
+                    # A contradicts B
+                    :contradicts
+                  ]
     end
 
     # Connection strength (0.0 to 1.0)
@@ -108,10 +117,12 @@ defmodule Thunderline.Memory.MemoryEdge do
 
       change fn changeset, _context ->
         current_strength = Ash.Changeset.get_attribute(changeset, :strength) || Decimal.new("0.5")
-        new_strength = Decimal.min(
-          Decimal.new("1.0"),
-          Decimal.add(current_strength, Decimal.new("0.1"))
-        )
+
+        new_strength =
+          Decimal.min(
+            Decimal.new("1.0"),
+            Decimal.add(current_strength, Decimal.new("0.1"))
+          )
 
         Ash.Changeset.change_attribute(changeset, :strength, new_strength)
       end
@@ -122,10 +133,12 @@ defmodule Thunderline.Memory.MemoryEdge do
 
       change fn changeset, _context ->
         current_strength = Ash.Changeset.get_attribute(changeset, :strength) || Decimal.new("0.5")
-        new_strength = Decimal.max(
-          Decimal.new("0.0"),
-          Decimal.sub(current_strength, Decimal.new("0.1"))
-        )
+
+        new_strength =
+          Decimal.max(
+            Decimal.new("0.0"),
+            Decimal.sub(current_strength, Decimal.new("0.1"))
+          )
 
         Ash.Changeset.change_attribute(changeset, :strength, new_strength)
       end
@@ -153,10 +166,17 @@ defmodule Thunderline.Memory.MemoryEdge do
   end
 
   validations do
-    validate compare(:strength, greater_than_or_equal_to: Decimal.new("0.0"),
-                    message: "Strength must be between 0.0 and 1.0")
-    validate compare(:strength, less_than_or_equal_to: Decimal.new("1.0"),
-                    message: "Strength must be between 0.0 and 1.0")  end
+    validate compare(:strength,
+               greater_than_or_equal_to: Decimal.new("0.0"),
+               message: "Strength must be between 0.0 and 1.0"
+             )
+
+    validate compare(:strength,
+               less_than_or_equal_to: Decimal.new("1.0"),
+               message: "Strength must be between 0.0 and 1.0"
+             )
+  end
+
   code_interface do
     domain Thunderline.Domain
 

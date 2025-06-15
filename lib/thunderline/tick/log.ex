@@ -36,7 +36,8 @@ defmodule Thunderline.Tick.Log do
       index [:agent_id, :inserted_at]
       index [:decision], using: "gin"
       index [:state_changes], using: "gin"
-      index [:node_id, :inserted_at] # Federation support
+      # Federation support
+      index [:node_id, :inserted_at]
     end
   end
 
@@ -65,7 +66,8 @@ defmodule Thunderline.Tick.Log do
 
     # Tick timing
     attribute :tick_duration_ms, :integer
-    attribute :time_since_last_tick, :integer # seconds
+    # seconds
+    attribute :time_since_last_tick, :integer
 
     # Decision and reasoning data
     attribute :decision, :map do
@@ -109,6 +111,7 @@ defmodule Thunderline.Tick.Log do
 
     # Performance metrics
     attribute :ai_response_time_ms, :integer
+
     attribute :pipeline_stage_times, :map do
       default %{}
     end
@@ -139,11 +142,26 @@ defmodule Thunderline.Tick.Log do
 
     create :create_tick_log do
       accept [
-        :agent_id, :node_id, :federation_context, :tick_number,
-        :tick_duration_ms, :time_since_last_tick, :decision, :reasoning,
-        :actions_taken, :action_success_rate, :state_changes, :stat_changes,
-        :zone_context, :social_context, :memories_formed, :narrative,
-        :ai_response_time_ms, :pipeline_stage_times, :errors, :broadway_metadata
+        :agent_id,
+        :node_id,
+        :federation_context,
+        :tick_number,
+        :tick_duration_ms,
+        :time_since_last_tick,
+        :decision,
+        :reasoning,
+        :actions_taken,
+        :action_success_rate,
+        :state_changes,
+        :stat_changes,
+        :zone_context,
+        :social_context,
+        :memories_formed,
+        :narrative,
+        :ai_response_time_ms,
+        :pipeline_stage_times,
+        :errors,
+        :broadway_metadata
       ]
     end
 
@@ -178,7 +196,8 @@ defmodule Thunderline.Tick.Log do
     read :federation_analytics do
       argument :days_back, :integer, default: 7
       filter expr(inserted_at > ago(^arg(:days_back), "day"))
-    end  end
+    end
+  end
 
   # TODO: Add code_interface once compilation issues are resolved
   # code_interface do
@@ -252,6 +271,7 @@ defmodule Thunderline.Tick.Log do
       {:ok, metrics}
     end
   end
+
   def get_node_metrics(node_id, days_back \\ 7) do
     since_date = DateTime.utc_now() |> DateTime.add(-days_back, :day)
 
@@ -275,6 +295,7 @@ defmodule Thunderline.Tick.Log do
       {:ok, metrics}
     end
   end
+
   def get_narrative_timeline(agent_id, limit \\ 10) do
     __MODULE__
     |> Ash.Query.filter(agent_id == agent_id)
@@ -324,10 +345,11 @@ defmodule Thunderline.Tick.Log do
     if Enum.empty?(actions) do
       0.0
     else
-      successful_count = Enum.count(actions, & Map.get(&1, "success", false))
+      successful_count = Enum.count(actions, &Map.get(&1, "success", false))
       Decimal.from_float(successful_count / length(actions))
     end
   end
+
   defp calculate_success_rate(_), do: 0.0
 
   defp extract_errors(tick_result) do
@@ -337,7 +359,7 @@ defmodule Thunderline.Tick.Log do
     # Check for action failures
     action_errors =
       tick_result.actions_taken
-      |> Enum.filter(& !Map.get(&1, "success", true))
+      |> Enum.filter(&(!Map.get(&1, "success", true)))
       |> Enum.map(fn action ->
         %{
           type: "action_failure",
@@ -354,9 +376,10 @@ defmodule Thunderline.Tick.Log do
     if Enum.empty?(logs) do
       0.0
     else
-      total = Enum.reduce(logs, Decimal.new(0), fn log, acc ->
-        Decimal.add(acc, log.action_success_rate || Decimal.new(0))
-      end)
+      total =
+        Enum.reduce(logs, Decimal.new(0), fn log, acc ->
+          Decimal.add(acc, log.action_success_rate || Decimal.new(0))
+        end)
 
       Decimal.div(total, length(logs))
       |> Decimal.to_float()
@@ -366,7 +389,7 @@ defmodule Thunderline.Tick.Log do
   defp get_most_common_actions(logs) do
     logs
     |> Enum.flat_map(& &1.actions_taken)
-    |> Enum.map(& Map.get(&1, "action", "unknown"))
+    |> Enum.map(&Map.get(&1, "action", "unknown"))
     |> Enum.frequencies()
     |> Enum.sort_by(fn {_action, count} -> count end, :desc)
     |> Enum.take(5)
@@ -374,7 +397,7 @@ defmodule Thunderline.Tick.Log do
 
   defp get_mood_distribution(logs) do
     logs
-    |> Enum.map(& get_in(&1.state_changes, ["mood"]))
+    |> Enum.map(&get_in(&1.state_changes, ["mood"]))
     |> Enum.reject(&is_nil/1)
     |> Enum.frequencies()
   end
@@ -404,7 +427,7 @@ defmodule Thunderline.Tick.Log do
 
   defp count_active_days(logs) do
     logs
-    |> Enum.map(& DateTime.to_date(&1.inserted_at))
+    |> Enum.map(&DateTime.to_date(&1.inserted_at))
     |> Enum.uniq()
     |> length()
   end
@@ -427,7 +450,8 @@ defmodule Thunderline.Tick.Log do
         |> then(fn {min_time, max_time} ->
           DateTime.diff(max_time, min_time, :hour)
         end)
-        |> max(1) # Minimum 1 hour to avoid division by zero
+        # Minimum 1 hour to avoid division by zero
+        |> max(1)
 
       length(logs) / time_span_hours
     end
@@ -476,12 +500,13 @@ defmodule Thunderline.Tick.Log do
     logs
     |> Enum.group_by(& &1.node_id)
     |> Enum.map(fn {node_id, node_logs} ->
-      {node_id, %{
-        tick_count: length(node_logs),
-        average_duration: calculate_average_tick_duration(node_logs),
-        success_rate: calculate_average_success_rate(node_logs),
-        error_rate: calculate_error_rate(node_logs)
-      }}
+      {node_id,
+       %{
+         tick_count: length(node_logs),
+         average_duration: calculate_average_tick_duration(node_logs),
+         success_rate: calculate_average_success_rate(node_logs),
+         error_rate: calculate_error_rate(node_logs)
+       }}
     end)
     |> Map.new()
   end

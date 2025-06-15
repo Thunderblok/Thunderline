@@ -18,7 +18,8 @@ defmodule ThunderlineWeb.PacDashboardLive do
     if connected?(socket) do
       Phoenix.PubSub.subscribe(PubSub, "agents:updates")
       Phoenix.PubSub.subscribe(Thunderline.PubSub, "zone:all")
-      Process.send_after(self(), :check_zone_data, 5000) # Check after 5 seconds
+      # Check after 5 seconds
+      Process.send_after(self(), :check_zone_data, 5000)
     end
 
     pacs = Agent.list_active()
@@ -29,11 +30,15 @@ defmodule ThunderlineWeb.PacDashboardLive do
       end
     end
 
-    {:ok,
-     assign(socket,
-       pacs: pacs,
-       loading: false
-     ), temporary_assigns: [pacs: [], selected_pac_for_dev_panel: nil]} # zone_events is not temporary
+    {
+      :ok,
+      assign(socket,
+        pacs: pacs,
+        loading: false
+      ),
+      # zone_events is not temporary
+      temporary_assigns: [pacs: [], selected_pac_for_dev_panel: nil]
+    }
   end
 
   @impl true
@@ -44,7 +49,8 @@ defmodule ThunderlineWeb.PacDashboardLive do
       # Zone data has arrived, no need to set the flag, or could explicitly set to false
       # depending on desired behavior if it can become unavailable again.
       # For now, once data is seen, we assume it's generally available.
-      {:noreply, assign(socket, :zone_data_unavailable, false)} # Or just {:noreply, socket}
+      # Or just {:noreply, socket}
+      {:noreply, assign(socket, :zone_data_unavailable, false)}
     end
   end
 
@@ -53,7 +59,8 @@ defmodule ThunderlineWeb.PacDashboardLive do
     updated_pacs =
       Enum.map(socket.assigns.pacs, fn pac ->
         if pac.id == updated_pac_data.id do
-          Process.send_after(self(), {:clear_pulse, pac.id}, 300) # Pulse for 300ms
+          # Pulse for 300ms
+          Process.send_after(self(), {:clear_pulse, pac.id}, 300)
           Map.merge(pac, Map.merge(updated_pac_data, %{just_updated: true}))
         else
           pac
@@ -66,14 +73,17 @@ defmodule ThunderlineWeb.PacDashboardLive do
         # Re-fetch to get potentially more complete data than what's in updated_pac_data
         # and to ensure it's the full Ash resource if `updated_pac_data` is just a map.
         current_selected_pac_id = socket.assigns.selected_pac_id_for_dev_panel
+
         if current_selected_pac_id do
           updated_selected_pac = Agent.get_by_id(current_selected_pac_id)
           assign(socket, selected_pac_for_dev_panel: updated_selected_pac)
         else
-          socket # No PAC was selected, so no update needed here
+          # No PAC was selected, so no update needed here
+          socket
         end
       else
-        socket # Update was for a different PAC or no PAC selected
+        # Update was for a different PAC or no PAC selected
+        socket
       end
 
     {:noreply, assign(socket_after_pac_update, :pacs, updated_pacs)}
@@ -85,7 +95,8 @@ defmodule ThunderlineWeb.PacDashboardLive do
       if pac_id_str == "" do
         nil
       else
-        pac_id_str # Assuming pac_id_str is the actual ID, not needing String.to_integer
+        # Assuming pac_id_str is the actual ID, not needing String.to_integer
+        pac_id_str
       end
 
     selected_pac =
@@ -106,7 +117,8 @@ defmodule ThunderlineWeb.PacDashboardLive do
   @impl true
   def handle_event("trigger_manual_tick", _payload, socket) do
     pac_id = socket.assigns.selected_pac_id_for_dev_panel
-    socket_with_flash = socket # Default to current socket
+    # Default to current socket
+    socket_with_flash = socket
 
     if pac_id do
       case Agent.tick(%{id: pac_id}) do
@@ -117,12 +129,14 @@ defmodule ThunderlineWeb.PacDashboardLive do
           # Re-fetch selected_pac_for_dev_panel to show immediate effect
           # This ensures the "Raw Ash Resource Dump" is up-to-date after the tick.
           if socket.assigns.selected_pac_id_for_dev_panel do
-             updated_selected_pac_after_tick = Agent.get_by_id(socket.assigns.selected_pac_id_for_dev_panel)
-             assign(socket_with_flash, selected_pac_for_dev_panel: updated_selected_pac_after_tick)
-          else
-            socket_with_flash # Should not happen if pac_id was valid, but as a safeguard
-          end
+            updated_selected_pac_after_tick =
+              Agent.get_by_id(socket.assigns.selected_pac_id_for_dev_panel)
 
+            assign(socket_with_flash, selected_pac_for_dev_panel: updated_selected_pac_after_tick)
+          else
+            # Should not happen if pac_id was valid, but as a safeguard
+            socket_with_flash
+          end
 
         {:error, reason} ->
           socket_with_flash =
@@ -135,22 +149,23 @@ defmodule ThunderlineWeb.PacDashboardLive do
     else
       socket_with_flash = put_flash(socket, :error, "No PAC selected to trigger a manual tick.")
     end
+
     # Ensure the final socket from put_flash and assign is returned
-    final_socket_state = if pac_id && elem(Agent.tick(%{id: pac_id}), 0) == :ok do
-      # If tick was successful, selected_pac_for_dev_panel was updated by assign in the :ok case
-      # so socket_with_flash already has that.
-      # However, the above Agent.tick call is a second call, which is not intended.
-      # Let's restructure slightly.
+    final_socket_state =
+      if pac_id && elem(Agent.tick(%{id: pac_id}), 0) == :ok do
+        # If tick was successful, selected_pac_for_dev_panel was updated by assign in the :ok case
+        # so socket_with_flash already has that.
+        # However, the above Agent.tick call is a second call, which is not intended.
+        # Let's restructure slightly.
 
-      # The assign for selected_pac_for_dev_panel should happen INSIDE the :ok tuple's handling
-      # And the socket_with_flash should be the one that gets this assign.
-      # The current logic for assign is okay, but the final_socket_state logic is flawed.
-      # Simply returning socket_with_flash is correct.
-      socket_with_flash
-    else
-      socket_with_flash
-    end
-
+        # The assign for selected_pac_for_dev_panel should happen INSIDE the :ok tuple's handling
+        # And the socket_with_flash should be the one that gets this assign.
+        # The current logic for assign is okay, but the final_socket_state logic is flawed.
+        # Simply returning socket_with_flash is correct.
+        socket_with_flash
+      else
+        socket_with_flash
+      end
 
     # The previous complex assignment logic for final_socket_state was incorrect.
     # The socket_with_flash is correctly updated with flash messages.
@@ -180,13 +195,16 @@ defmodule ThunderlineWeb.PacDashboardLive do
     updated_pacs =
       Enum.map(socket.assigns.pacs, fn pac ->
         if pac.id == agent_data.id do
-          Process.send_after(self(), {:clear_pulse, pac.id}, 300) # Pulse for 300ms
+          # Pulse for 300ms
+          Process.send_after(self(), {:clear_pulse, pac.id}, 300)
+
           # Merge the new information into the existing PAC data, add last_tick_result and just_updated
           Map.merge(pac, Map.merge(updated_agent_info, %{just_updated: true}))
         else
           pac
         end
       end)
+
     {:noreply, assign(socket, :pacs, updated_pacs)}
   end
 
@@ -200,6 +218,7 @@ defmodule ThunderlineWeb.PacDashboardLive do
           pac
         end
       end)
+
     {:noreply, assign(socket, :pacs, updated_pacs)}
   end
 
@@ -219,21 +238,27 @@ defmodule ThunderlineWeb.PacDashboardLive do
   end
 
   def pac_card_classes(pac, zone_events) do
-    base_classes = "rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 ease-in-out p-4 block" # New base classes from prompt
+    # New base classes from prompt
+    base_classes =
+      "rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 ease-in-out p-4 block"
 
+    # Assuming pac.zone_id is the correct field for current zone
     highlight_class =
-      if pac_zone_id = pac.zone_id do # Assuming pac.zone_id is the correct field for current zone
+      if pac_zone_id = pac.zone_id do
         # Check if there's any event for the PAC's current zone
         if Map.has_key?(zone_events, pac_zone_id) do
-          " zone-highlight" # Add leading space for class concatenation
+          # Add leading space for class concatenation
+          " zone-highlight"
         else
           ""
         end
       else
-        "" # No zone_id for the PAC, so no highlight
+        # No zone_id for the PAC, so no highlight
+        ""
       end
 
-    pulse_class = if pac.just_updated, do: " pulse-animation", else: "" # Add leading space if used
+    # Add leading space if used
+    pulse_class = if pac.just_updated, do: " pulse-animation", else: ""
 
     # Ensure proper spacing when concatenating classes
     # Trim to avoid leading/trailing spaces if some classes are empty, then join.
@@ -242,9 +267,12 @@ defmodule ThunderlineWeb.PacDashboardLive do
     # A more robust way is to build a list and join.
     classes = [
       base_classes,
-      String.trim(highlight_class), # remove leading space if present, then let join handle it
-      String.trim(pulse_class)      # remove leading space if present
+      # remove leading space if present, then let join handle it
+      String.trim(highlight_class),
+      # remove leading space if present
+      String.trim(pulse_class)
     ]
+
     Enum.reject(classes, &(&1 == "")) |> Enum.join(" ")
   end
 end

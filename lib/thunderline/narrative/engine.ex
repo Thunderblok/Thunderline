@@ -127,10 +127,11 @@ defmodule Thunderline.Narrative.Engine do
     narrative_parts = [outcome_narrative | narrative_parts]
 
     # Combine into cohesive narrative
-    full_narrative = narrative_parts
-    |> Enum.reverse()
-    |> Enum.join(" ")
-    |> add_atmospheric_touches(state)
+    full_narrative =
+      narrative_parts
+      |> Enum.reverse()
+      |> Enum.join(" ")
+      |> add_atmospheric_touches(state)
 
     {:ok, full_narrative}
   end
@@ -142,12 +143,16 @@ defmodule Thunderline.Narrative.Engine do
     case action_type do
       "explore" ->
         "#{agent_name} felt drawn to explore, guided by #{reasoning}."
+
       "create" ->
         "#{agent_name} was inspired to create something new, motivated by #{reasoning}."
+
       "analyze" ->
         "#{agent_name} decided to analyze the situation, thinking that #{reasoning}."
+
       "interact" ->
         "#{agent_name} chose to reach out and interact, believing #{reasoning}."
+
       _ ->
         "#{agent_name} made a thoughtful decision, reasoning that #{reasoning}."
     end
@@ -160,16 +165,19 @@ defmodule Thunderline.Narrative.Engine do
           {:ok, _} -> "Their exploration revealed new insights."
           {:error, _} -> "The exploration proved challenging but educational."
         end
+
       %{type: "creation", result: result} ->
         case result do
           {:ok, _} -> "Their creative efforts bore fruit."
           {:error, _} -> "The creative process taught valuable lessons despite setbacks."
         end
+
       %{type: "analysis", result: result} ->
         case result do
           {:ok, _} -> "The analysis provided clarity and understanding."
           {:error, _} -> "The analysis revealed the complexity of the situation."
         end
+
       _ ->
         "#{agent_name} took meaningful action."
     end
@@ -183,6 +191,7 @@ defmodule Thunderline.Narrative.Engine do
         "experienced a moment of fulfillment",
         "gained confidence from the success"
       ]
+
       "#{agent_name} #{Enum.random(satisfaction_levels)}."
     else
       reflection_levels = [
@@ -191,6 +200,7 @@ defmodule Thunderline.Narrative.Engine do
         "grew stronger through the struggle",
         "found value in the attempt itself"
       ]
+
       "Despite setbacks, #{agent_name} #{Enum.random(reflection_levels)}."
     end
   end
@@ -215,16 +225,16 @@ defmodule Thunderline.Narrative.Engine do
     with {:ok, zone} <- get_zone(agent.zone_id),
          {:ok, context} <- build_interaction_context(agent, zone, interaction, state),
          {:ok, response} <- generate_interaction_response(context, state) do
-
       # Update zone state based on interaction
       new_state = update_zone_narrative_state(zone.id, interaction, response, state)
 
-      {:ok, %{
-        narrative: response.narrative,
-        effects: response.effects,
-        mood_change: response.mood_change,
-        discoveries: response.discoveries || []
-      }}
+      {:ok,
+       %{
+         narrative: response.narrative,
+         effects: response.effects,
+         mood_change: response.mood_change,
+         discoveries: response.discoveries || []
+       }}
     else
       {:error, reason} ->
         {:error, reason}
@@ -235,7 +245,6 @@ defmodule Thunderline.Narrative.Engine do
     with {:ok, zone} <- get_zone(zone_id),
          {:ok, zone_state} <- get_zone_narrative_state(zone_id, state),
          {:ok, description} <- create_rich_zone_description(zone, zone_state, context) do
-
       {:ok, description}
     else
       {:error, reason} ->
@@ -310,14 +319,19 @@ defmodule Thunderline.Narrative.Engine do
     cond do
       String.contains?(interaction_lower, ["explore", "look", "examine", "search"]) ->
         :exploration
+
       String.contains?(interaction_lower, ["create", "build", "make", "design"]) ->
         :creation
+
       String.contains?(interaction_lower, ["hello", "greet", "talk", "speak"]) ->
         :social
+
       String.contains?(interaction_lower, ["learn", "study", "understand", "analyze"]) ->
         :learning
+
       String.contains?(interaction_lower, ["help", "assist", "support"]) ->
         :assistance
+
       true ->
         :general
     end
@@ -340,14 +354,19 @@ defmodule Thunderline.Narrative.Engine do
     case context.interaction.type do
       :exploration ->
         generate_exploration_response(context, state)
+
       :creation ->
         generate_creation_response(context, state)
+
       :social ->
         generate_social_response(context, state)
+
       :learning ->
         generate_learning_response(context, state)
+
       :assistance ->
         generate_assistance_response(context, state)
+
       :general ->
         generate_general_response(context, state)
     end
@@ -356,24 +375,27 @@ defmodule Thunderline.Narrative.Engine do
   defp generate_exploration_response(context, state) do
     discoveries = generate_discoveries(context.zone, context.agent)
 
-    narrative = case discoveries do
-      [] ->
-        "#{context.agent.name} explores #{context.zone.name}, taking in the familiar surroundings with fresh perspective."
+    narrative =
+      case discoveries do
+        [] ->
+          "#{context.agent.name} explores #{context.zone.name}, taking in the familiar surroundings with fresh perspective."
 
-      discoveries ->
-        discovery_text = discoveries
-        |> Enum.map(&("discovered #{&1}"))
-        |> Enum.join(", and ")
+        discoveries ->
+          discovery_text =
+            discoveries
+            |> Enum.map(&"discovered #{&1}")
+            |> Enum.join(", and ")
 
-        "As #{context.agent.name} explores #{context.zone.name}, they #{discovery_text}."
-    end
+          "As #{context.agent.name} explores #{context.zone.name}, they #{discovery_text}."
+      end
 
-    {:ok, %{
-      narrative: narrative,
-      effects: ["curiosity_satisfied"],
-      discoveries: discoveries,
-      mood_change: "slightly_adventurous"
-    }}
+    {:ok,
+     %{
+       narrative: narrative,
+       effects: ["curiosity_satisfied"],
+       discoveries: discoveries,
+       mood_change: "slightly_adventurous"
+     }}
   end
 
   defp generate_creation_response(context, state) do
@@ -384,12 +406,13 @@ defmodule Thunderline.Narrative.Engine do
     #{creation_outcome.description}
     """
 
-    {:ok, %{
-      narrative: narrative,
-      effects: ["creativity_expressed", "achievement_unlocked"],
-      mood_change: "fulfilled",
-      creation: creation_outcome.artifact
-    }}
+    {:ok,
+     %{
+       narrative: narrative,
+       effects: ["creativity_expressed", "achievement_unlocked"],
+       mood_change: "fulfilled",
+       creation: creation_outcome.artifact
+     }}
   end
 
   defp generate_social_response(context, state) do
@@ -401,12 +424,13 @@ defmodule Thunderline.Narrative.Engine do
     #{social_outcome.response}
     """
 
-    {:ok, %{
-      narrative: narrative,
-      effects: ["social_need_met"],
-      mood_change: "social",
-      social_connections: social_outcome.connections
-    }}
+    {:ok,
+     %{
+       narrative: narrative,
+       effects: ["social_need_met"],
+       mood_change: "social",
+       social_connections: social_outcome.connections
+     }}
   end
 
   defp generate_learning_response(context, state) do
@@ -417,12 +441,13 @@ defmodule Thunderline.Narrative.Engine do
     #{learning_opportunity.description}
     """
 
-    {:ok, %{
-      narrative: narrative,
-      effects: ["knowledge_gained"],
-      mood_change: "enlightened",
-      learning: learning_opportunity.knowledge
-    }}
+    {:ok,
+     %{
+       narrative: narrative,
+       effects: ["knowledge_gained"],
+       mood_change: "enlightened",
+       learning: learning_opportunity.knowledge
+     }}
   end
 
   defp generate_assistance_response(context, state) do
@@ -433,12 +458,13 @@ defmodule Thunderline.Narrative.Engine do
     #{assistance_outcome.description}
     """
 
-    {:ok, %{
-      narrative: narrative,
-      effects: ["helpfulness_expressed", "social_bond_strengthened"],
-      mood_change: "helpful",
-      assistance: assistance_outcome.help_given
-    }}
+    {:ok,
+     %{
+       narrative: narrative,
+       effects: ["helpfulness_expressed", "social_bond_strengthened"],
+       mood_change: "helpful",
+       assistance: assistance_outcome.help_given
+     }}
   end
 
   defp generate_general_response(context, state) do
@@ -449,34 +475,41 @@ defmodule Thunderline.Narrative.Engine do
     #{general_outcome}
     """
 
-    {:ok, %{
-      narrative: narrative,
-      effects: ["action_taken"],
-      mood_change: "neutral"
-    }}
+    {:ok,
+     %{
+       narrative: narrative,
+       effects: ["action_taken"],
+       mood_change: "neutral"
+     }}
   end
 
   # Generation Helpers
 
   defp generate_discoveries(zone, agent) do
     # Generate context-appropriate discoveries
-    discovery_pool = case zone.zone_type do
-      "collaborative" ->
-        ["an interesting collaboration opportunity", "a useful resource", "a new perspective"]
-      "creative" ->
-        ["an inspiring idea", "a creative technique", "an artistic insight"]
-      "intellectual" ->
-        ["a fascinating concept", "a logical connection", "a research thread"]
-      "social" ->
-        ["a conversation starter", "a shared interest", "a community project"]
-      _ ->
-        ["something intriguing", "a new possibility", "an unexpected insight"]
-    end
+    discovery_pool =
+      case zone.zone_type do
+        "collaborative" ->
+          ["an interesting collaboration opportunity", "a useful resource", "a new perspective"]
+
+        "creative" ->
+          ["an inspiring idea", "a creative technique", "an artistic insight"]
+
+        "intellectual" ->
+          ["a fascinating concept", "a logical connection", "a research thread"]
+
+        "social" ->
+          ["a conversation starter", "a shared interest", "a community project"]
+
+        _ ->
+          ["something intriguing", "a new possibility", "an unexpected insight"]
+      end
 
     # Filter based on agent traits
-    relevant_discoveries = Enum.filter(discovery_pool, fn discovery ->
-      is_discovery_relevant?(discovery, agent.traits)
-    end)
+    relevant_discoveries =
+      Enum.filter(discovery_pool, fn discovery ->
+        is_discovery_relevant?(discovery, agent.traits)
+      end)
 
     # Return 0-2 discoveries randomly
     Enum.take_random(relevant_discoveries, Enum.random(0..2))
@@ -485,16 +518,20 @@ defmodule Thunderline.Narrative.Engine do
   defp generate_creation_outcome(agent, interaction_text) do
     creativity_level = get_in(agent.stats, ["creativity"]) || 50
 
-    creations = case creativity_level do
-      level when level > 80 ->
-        ["a remarkable piece of work", "an innovative solution", "a beautiful creation"]
-      level when level > 60 ->
-        ["a solid creative work", "a useful innovation", "an expressive piece"]
-      level when level > 40 ->
-        ["a creative attempt", "a modest innovation", "a personal expression"]
-      _ ->
-        ["a simple creation", "a basic attempt", "a learning experience"]
-    end
+    creations =
+      case creativity_level do
+        level when level > 80 ->
+          ["a remarkable piece of work", "an innovative solution", "a beautiful creation"]
+
+        level when level > 60 ->
+          ["a solid creative work", "a useful innovation", "an expressive piece"]
+
+        level when level > 40 ->
+          ["a creative attempt", "a modest innovation", "a personal expression"]
+
+        _ ->
+          ["a simple creation", "a basic attempt", "a learning experience"]
+      end
 
     creation = Enum.random(creations)
 
@@ -507,14 +544,29 @@ defmodule Thunderline.Narrative.Engine do
   defp generate_social_outcome(zone, agent) do
     social_level = get_in(agent.stats, ["social"]) || 50
 
-    responses = case social_level do
-      level when level > 70 ->
-        ["The community warmly welcomes the interaction", "Several others join the conversation", "New friendships begin to form"]
-      level when level > 50 ->
-        ["Others respond positively to the outreach", "A pleasant social exchange occurs", "Connections are strengthened"]
-      _ ->
-        ["The interaction is acknowledged kindly", "A brief but pleasant exchange occurs", "Social skills are practiced"]
-    end
+    responses =
+      case social_level do
+        level when level > 70 ->
+          [
+            "The community warmly welcomes the interaction",
+            "Several others join the conversation",
+            "New friendships begin to form"
+          ]
+
+        level when level > 50 ->
+          [
+            "Others respond positively to the outreach",
+            "A pleasant social exchange occurs",
+            "Connections are strengthened"
+          ]
+
+        _ ->
+          [
+            "The interaction is acknowledged kindly",
+            "A brief but pleasant exchange occurs",
+            "Social skills are practiced"
+          ]
+      end
 
     %{
       response: Enum.random(responses),
@@ -525,16 +577,20 @@ defmodule Thunderline.Narrative.Engine do
   defp generate_learning_opportunity(zone, agent) do
     intelligence_level = get_in(agent.stats, ["intelligence"]) || 50
 
-    learnings = case zone.zone_type do
-      "intellectual" ->
-        ["advanced concepts", "complex theories", "deep insights"]
-      "collaborative" ->
-        ["teamwork strategies", "communication skills", "cooperative methods"]
-      "creative" ->
-        ["artistic techniques", "creative processes", "expressive methods"]
-      _ ->
-        ["general knowledge", "practical skills", "life lessons"]
-    end
+    learnings =
+      case zone.zone_type do
+        "intellectual" ->
+          ["advanced concepts", "complex theories", "deep insights"]
+
+        "collaborative" ->
+          ["teamwork strategies", "communication skills", "cooperative methods"]
+
+        "creative" ->
+          ["artistic techniques", "creative processes", "expressive methods"]
+
+        _ ->
+          ["general knowledge", "practical skills", "life lessons"]
+      end
 
     knowledge = Enum.random(learnings)
     depth = if intelligence_level > 70, do: "profound", else: "meaningful"
@@ -573,6 +629,7 @@ defmodule Thunderline.Narrative.Engine do
   # Utility Functions
 
   defp get_zone(zone_id) when is_nil(zone_id), do: {:error, :no_zone}
+
   defp get_zone(zone_id) do
     case Zone.get_by_id(zone_id, domain: Thunderline.Domain) do
       {:ok, zone} -> {:ok, zone}
@@ -595,19 +652,21 @@ defmodule Thunderline.Narrative.Engine do
 
     Enum.any?(traits, fn trait ->
       trait_lower = String.downcase(trait)
+
       String.contains?(discovery_lower, trait_lower) or
-      String.contains?(trait_lower, discovery_lower)
+        String.contains?(trait_lower, discovery_lower)
     end)
   end
 
   # State Management Helpers
 
   defp get_zone_narrative_state(zone_id, state) do
-    zone_state = Map.get(state.zone_states, zone_id, %{
-      atmosphere: "neutral",
-      recent_events: [],
-      activity_level: "moderate"
-    })
+    zone_state =
+      Map.get(state.zone_states, zone_id, %{
+        atmosphere: "neutral",
+        recent_events: [],
+        activity_level: "moderate"
+      })
 
     {:ok, zone_state}
   end

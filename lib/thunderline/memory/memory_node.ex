@@ -52,7 +52,8 @@ defmodule Thunderline.Memory.MemoryNode do
     # Vector embedding for similarity search
     attribute :embedding, :vector do
       allow_nil? true
-      constraints dimensions: 1536  # OpenAI text-embedding-3-small dimensions
+      # OpenAI text-embedding-3-small dimensions
+      constraints dimensions: 1536
     end
 
     # Importance score (0.0 to 1.0)
@@ -111,8 +112,10 @@ defmodule Thunderline.Memory.MemoryNode do
         case generate_embedding(content) do
           {:ok, embedding} ->
             Ash.Changeset.change_attribute(changeset, :embedding, embedding)
+
           {:error, _} ->
-            changeset  # Continue without embedding
+            # Continue without embedding
+            changeset
         end
       end
     end
@@ -128,11 +131,13 @@ defmodule Thunderline.Memory.MemoryNode do
           case generate_embedding(content) do
             {:ok, embedding} ->
               Ash.Changeset.change_attribute(changeset, :embedding, embedding)
+
             {:error, _} ->
               changeset
           end
         else
-          changeset        end
+          changeset
+        end
       end
     end
 
@@ -168,9 +173,7 @@ defmodule Thunderline.Memory.MemoryNode do
       argument :limit, :integer, allow_nil?: false, default: 10
       argument :threshold, :decimal, allow_nil?: false, default: Decimal.new("0.7")
 
-      filter expr(
-        fragment("? <=> ? < ?", embedding, ^arg(:embedding), ^arg(:threshold))
-      )
+      filter expr(fragment("? <=> ? < ?", embedding, ^arg(:embedding), ^arg(:threshold)))
     end
   end
 
@@ -191,10 +194,17 @@ defmodule Thunderline.Memory.MemoryNode do
   end
 
   validations do
-    validate compare(:importance, greater_than_or_equal_to: Decimal.new("0.0"),
-                    message: "Importance must be between 0.0 and 1.0")
-    validate compare(:importance, less_than_or_equal_to: Decimal.new("1.0"),
-                    message: "Importance must be between 0.0 and 1.0")  end
+    validate compare(:importance,
+               greater_than_or_equal_to: Decimal.new("0.0"),
+               message: "Importance must be between 0.0 and 1.0"
+             )
+
+    validate compare(:importance,
+               less_than_or_equal_to: Decimal.new("1.0"),
+               message: "Importance must be between 0.0 and 1.0"
+             )
+  end
+
   code_interface do
     domain Thunderline.Domain
 

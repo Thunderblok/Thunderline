@@ -85,9 +85,7 @@ defmodule Thunderline.PAC.Manager do
   def handle_call({:create_agent, name, zone_id, opts}, _from, state) do
     case create_agent_impl(name, zone_id, opts) do
       {:ok, agent} ->
-        new_state = %{state |
-          active_agents: MapSet.put(state.active_agents, agent.id)
-        }
+        new_state = %{state | active_agents: MapSet.put(state.active_agents, agent.id)}
         {:reply, {:ok, agent}, new_state}
 
       {:error, reason} ->
@@ -147,10 +145,7 @@ defmodule Thunderline.PAC.Manager do
     tick_results = process_global_tick(state.active_agents)
 
     # Update state
-    new_state = %{state |
-      tick_count: state.tick_count + 1,
-      last_tick: DateTime.utc_now()
-    }
+    new_state = %{state | tick_count: state.tick_count + 1, last_tick: DateTime.utc_now()}
 
     # Schedule next tick
     schedule_tick()
@@ -215,9 +210,13 @@ defmodule Thunderline.PAC.Manager do
 
     # Process ticks in parallel for better performance
     agent_ids
-    |> Task.async_stream(fn agent_id ->
-      {agent_id, tick_agent_impl(agent_id)}
-    end, max_concurrency: 10, timeout: 30_000)
+    |> Task.async_stream(
+      fn agent_id ->
+        {agent_id, tick_agent_impl(agent_id)}
+      end,
+      max_concurrency: 10,
+      timeout: 30_000
+    )
     |> Enum.map(fn {:ok, result} -> result end)
     |> Enum.into(%{})
   end

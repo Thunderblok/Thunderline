@@ -5,33 +5,40 @@
       <h1 class="text-2xl font-bold text-white">
         ⚡ OKO GridWorld - PAC Tracking System ⚡
       </h1>
+      
       <div class="flex space-x-4 text-sm">
         <span class="bg-blue-600 px-3 py-1 rounded">
-          Region: <%= @current_region %>
+          Region: {@current_region}
         </span>
+        
         <span class="bg-green-600 px-3 py-1 rounded">
-          PACs: <%= length(@pacs) %>
+          PACs: {length(@pacs)}
         </span>
+        
         <span class="bg-purple-600 px-3 py-1 rounded">
           Grid: LIVE
         </span>
       </div>
     </div>
   </div>
-
-  <!-- Control Panel -->
+  
+<!-- Control Panel -->
   <div class="bg-slate-800 p-3 border-b border-slate-700">
     <div class="flex space-x-4 items-center">
-      <button 
-        phx-click="update_pacs" 
-        class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white font-medium transition-colors">
+      <button
+        phx-click="update_pacs"
+        class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white font-medium transition-colors"
+      >
         🔄 Refresh PACs
       </button>
       
       <select class="bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white">
         <option value="sector_alpha">Sector Alpha</option>
+        
         <option value="sector_beta">Sector Beta</option>
+        
         <option value="sector_gamma">Sector Gamma</option>
+        
         <option value="global_grid">Global Grid</option>
       </select>
       
@@ -40,83 +47,99 @@
       </div>
     </div>
   </div>
-
-  <!-- Google Maps Container -->
+  
+<!-- Google Maps Container -->
   <div class="flex-1 relative">
-    <div 
-      id="oko-grid-map" 
-      class="w-full h-full bg-slate-100" 
+    <div
+      id="oko-grid-map"
+      class="w-full h-full bg-slate-100"
       phx-hook="OKOGridMap"
       phx-update="ignore"
       data-region={@current_region}
       data-center={Jason.encode!(@map_center)}
-      data-zoom={@zoom_level}>
+      data-zoom={@zoom_level}
+    >
     </div>
     
-    <!-- Grid Overlay Controls -->
+<!-- Grid Overlay Controls -->
     <div class="absolute top-4 right-4 bg-slate-800 bg-opacity-90 p-4 rounded-lg shadow-lg">
       <h3 class="text-white font-bold mb-2">Grid Controls</h3>
+      
       <div class="space-y-2">
         <label class="flex items-center text-white">
-          <input type="checkbox" id="show-grid" class="mr-2" checked>
-          Show 3D Grid
+          <input type="checkbox" id="show-grid" class="mr-2" checked /> Show 3D Grid
         </label>
+        
         <label class="flex items-center text-white">
-          <input type="checkbox" id="show-regions" class="mr-2" checked>
-          Show Regions
+          <input type="checkbox" id="show-regions" class="mr-2" checked /> Show Regions
         </label>
+        
         <label class="flex items-center text-white">
-          <input type="checkbox" id="show-coordinates" class="mr-2">
-          Show Coordinates
+          <input type="checkbox" id="show-coordinates" class="mr-2" /> Show Coordinates
         </label>
+        
         <label class="flex items-center text-white">
-          <input type="checkbox" id="show-trails" class="mr-2">
-          Show PAC Trails
+          <input type="checkbox" id="show-trails" class="mr-2" /> Show PAC Trails
         </label>
       </div>
     </div>
-
-    <!-- Live Stats Panel -->
+    
+<!-- Live Stats Panel -->
     <div class="absolute bottom-4 left-4 bg-slate-800 bg-opacity-90 p-4 rounded-lg shadow-lg">
       <h3 class="text-white font-bold mb-2">Live Stats</h3>
+      
       <div class="text-sm text-slate-300 space-y-1">
-        <div>Active PACs: <span class="text-green-400"><%= length(@pacs) %></span></div>
-        <div>Current Region: <span class="text-blue-400"><%= @current_region %></span></div>
+        <div>Active PACs: <span class="text-green-400">{length(@pacs)}</span></div>
+        
+        <div>Current Region: <span class="text-blue-400">{@current_region}</span></div>
+        
         <div>Grid Status: <span class="text-green-400">OPERATIONAL</span></div>
+        
         <div>Sync Status: <span class="text-green-400">LIVE</span></div>
       </div>
     </div>
   </div>
-
-  <!-- Zone Status Overview (Placeholder for ZoneBadges) -->
+  
+<!-- Zone Status Overview (Placeholder for ZoneBadges) -->
   <div id="zone-status-overview" class="bg-slate-800 p-4 border-t border-slate-700">
     <h3 class="text-white font-bold mb-3 text-lg">Zone Status Overview</h3>
-    <div :if={@zones && Enum.any?(@zones)} class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    
+    <div
+      :if={@zones && Enum.any?(@zones)}
+      class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+    >
       <.each :let={zone} id={"zone-item-" <> zone.id} items={@zones}>
         <div class="border border-slate-700 p-3 rounded-md bg-slate-850 shadow">
-          <h4 class="text-md font-semibold text-cyan-400 mb-2">Zone: <%= zone.name || zone.id %></h4>
+          <h4 class="text-md font-semibold text-cyan-400 mb-2">Zone: {zone.name || zone.id}</h4>
+          
           <.live_component
             module={ThunderlineWeb.Components.ZoneBadge}
             id={"zone-badge-" <> zone.id}
             zone_event={zone.event}
             entropy={zone.entropy}
-          />
-          <%!-- Additional zone details could go here --%>
+          /> <%!-- Additional zone details could go here --%>
         </div>
       </.each>
     </div>
+    
     <p :if={!@zones || Enum.empty?(@zones)} class="text-slate-400 italic">
       No zone data available or zones not yet loaded. Ensure @zones is assigned in MapLive.
     </p>
   </div>
-
-  <!-- PAC Details Panel (Hidden by default, shown when PAC selected) -->
+  
+<!-- PAC Details Panel (Hidden by default, shown when PAC selected) -->
   <div id="pac-details" class="hidden bg-slate-800 p-4 border-t border-slate-700">
     <div class="flex justify-between items-center">
       <h3 class="text-white font-bold">PAC Details</h3>
-      <button onclick="document.getElementById('pac-details').classList.add('hidden')" 
-              class="text-slate-400 hover:text-white">✕</button>
+      
+      <button
+        onclick="document.getElementById('pac-details').classList.add('hidden')"
+        class="text-slate-400 hover:text-white"
+      >
+        ✕
+      </button>
     </div>
+    
     <div id="pac-info" class="text-slate-300 text-sm mt-2">
       <!-- PAC details will be populated by JavaScript -->
     </div>
@@ -129,23 +152,23 @@
     background-color: #1e293b !important;
     color: white !important;
   }
-  
+
   .gm-style-iw-d {
     background-color: #1e293b !important;
     color: white !important;
   }
-  
+
   /* PAC marker animations */
   .pac-marker {
     animation: pulse 2s infinite;
   }
-  
+
   @keyframes pulse {
     0% { opacity: 1; }
     50% { opacity: 0.7; }
     100% { opacity: 1; }
   }
-  
+
   /* Grid overlay styling */
   .grid-overlay {
     pointer-events: none;

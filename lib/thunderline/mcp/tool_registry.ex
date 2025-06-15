@@ -45,14 +45,15 @@ defmodule Thunderline.MCP.ToolRegistry do
   # Server Callbacks
 
   def handle_call(:list_tools, _from, state) do
-    tool_list = state.tools
-    |> Enum.map(fn {name, spec} ->
-      %{
-        name: name,
-        description: spec.description,
-        input_schema: spec.input_schema
-      }
-    end)
+    tool_list =
+      state.tools
+      |> Enum.map(fn {name, spec} ->
+        %{
+          name: name,
+          description: spec.description,
+          input_schema: spec.input_schema
+        }
+      end)
 
     {:reply, tool_list, state}
   end
@@ -103,7 +104,6 @@ defmodule Thunderline.MCP.ToolRegistry do
         },
         handler: &Tools.PACAgent.create_agent/2
       },
-
       "pac_get_agent" => %{
         description: "Get PAC agent information",
         input_schema: %{
@@ -115,7 +115,6 @@ defmodule Thunderline.MCP.ToolRegistry do
         },
         handler: &Tools.PACAgent.get_agent/2
       },
-
       "pac_update_agent" => %{
         description: "Update PAC agent properties",
         input_schema: %{
@@ -143,7 +142,6 @@ defmodule Thunderline.MCP.ToolRegistry do
         },
         handler: &Tools.Memory.search/2
       },
-
       "memory_store" => %{
         description: "Store information in agent memory",
         input_schema: %{
@@ -172,7 +170,6 @@ defmodule Thunderline.MCP.ToolRegistry do
         },
         handler: &Tools.Zone.create/2
       },
-
       "zone_list" => %{
         description: "List all zones",
         input_schema: %{
@@ -235,8 +232,9 @@ defmodule Thunderline.MCP.ToolRegistry do
     # Basic validation - in a real implementation, you'd use a JSON schema validator
     required_fields = Map.get(schema, :required, [])
 
-    missing_fields = required_fields
-    |> Enum.filter(fn field -> not Map.has_key?(arguments, field) end)
+    missing_fields =
+      required_fields
+      |> Enum.filter(fn field -> not Map.has_key?(arguments, field) end)
 
     if Enum.empty?(missing_fields) do
       :ok

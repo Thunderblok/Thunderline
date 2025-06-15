@@ -34,7 +34,9 @@ defmodule Thunderline.AI.AgentDecision do
 
     create :create do
       accept [:context_assessment, :available_actions, :agent_goals, :constraints, :time_pressure]
-    end    # Simplified action for decision making - using mock implementation for now
+    end
+
+    # Simplified action for decision making - using mock implementation for now
     action :make_decision, :struct do
       description "Make a decision based on context assessment and available options"
 
@@ -49,14 +51,15 @@ defmodule Thunderline.AI.AgentDecision do
         available = input.arguments.available_actions
         chosen = if Enum.empty?(available), do: "rest", else: Enum.random(available)
 
-        {:ok, %{
-          chosen_action: chosen,
-          reasoning: "Based on current context, this action seems most appropriate",
-          confidence: Decimal.new("0.7"),
-          alternatives_considered: available,
-          risk_assessment: %{level: "low", factors: []},
-          expected_outcome: "Positive outcome expected"
-        }}
+        {:ok,
+         %{
+           chosen_action: chosen,
+           reasoning: "Based on current context, this action seems most appropriate",
+           confidence: Decimal.new("0.7"),
+           alternatives_considered: available,
+           risk_assessment: %{level: "low", factors: []},
+           expected_outcome: "Positive outcome expected"
+         }}
       end
     end
   end
@@ -64,7 +67,9 @@ defmodule Thunderline.AI.AgentDecision do
   code_interface do
     domain Thunderline.Domain
 
-    define :make_decision, args: [:context_assessment, :available_actions, :agent_goals, :constraints, :time_pressure]
+    define :make_decision,
+      args: [:context_assessment, :available_actions, :agent_goals, :constraints, :time_pressure]
+
     define :create
   end
 end

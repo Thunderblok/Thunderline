@@ -26,14 +26,28 @@ defmodule Thunderline.World.ZoneEvent do
   ]
 
   @aura_types [
-    "cold", "warm", "electric", "peaceful", "chaotic",
-    "nostalgic", "ominous", "vibrant", "muted", "pulsing"
+    "cold",
+    "warm",
+    "electric",
+    "peaceful",
+    "chaotic",
+    "nostalgic",
+    "ominous",
+    "vibrant",
+    "muted",
+    "pulsing"
   ]
 
   @rewards [
-    "insight_shard", "energy_crystal", "memory_fragment",
-    "data_cache", "temporal_essence", "consciousness_spark",
-    "entropy_stabilizer", "harmonic_key", "void_whisper"
+    "insight_shard",
+    "energy_crystal",
+    "memory_fragment",
+    "data_cache",
+    "temporal_essence",
+    "consciousness_spark",
+    "entropy_stabilizer",
+    "harmonic_key",
+    "void_whisper"
   ]
 
   @doc """
@@ -58,8 +72,10 @@ defmodule Thunderline.World.ZoneEvent do
   defp base_event_probability(entropy, temp) do
     # Base 30% chance, increased by entropy and temperature
     base = 0.3
-    entropy_factor = entropy * 0.4  # High entropy zones are more active
-    temp_factor = abs(temp) * 0.2   # Extreme temperatures (hot or cold) increase activity
+    # High entropy zones are more active
+    entropy_factor = entropy * 0.4
+    # Extreme temperatures (hot or cold) increase activity
+    temp_factor = abs(temp) * 0.2
 
     min(0.9, base + entropy_factor + temp_factor)
   end
@@ -160,7 +176,8 @@ defmodule Thunderline.World.ZoneEvent do
   defp generate_harmonic_event(entropy, temp) do
     %{
       type: "harmonic_resonance",
-      description: "Crystalline harmonics resonate through the space, creating peaceful vibrations",
+      description:
+        "Crystalline harmonics resonate through the space, creating peaceful vibrations",
       hostility: 0.0,
       intensity: Float.round(0.4 + :rand.uniform() * 0.3, 2),
       rewards: ["harmonic_key", "consciousness_spark"],
@@ -247,11 +264,16 @@ defmodule Thunderline.World.ZoneEvent do
     entropy_change = calculate_entropy_change(event)
     temp_change = calculate_temperature_change(event)
 
-    new_entropy = Decimal.add(zone.entropy || Decimal.new("0.0"), Decimal.from_float(entropy_change))
-    new_temp = Decimal.add(zone.temperature || Decimal.new("0.0"), Decimal.from_float(temp_change))
+    new_entropy =
+      Decimal.add(zone.entropy || Decimal.new("0.0"), Decimal.from_float(entropy_change))
+
+    new_temp =
+      Decimal.add(zone.temperature || Decimal.new("0.0"), Decimal.from_float(temp_change))
 
     # Clamp values to reasonable ranges
-    clamped_entropy = Decimal.max(Decimal.new("0.0"), Decimal.min(new_entropy, Decimal.new("1.0")))
+    clamped_entropy =
+      Decimal.max(Decimal.new("0.0"), Decimal.min(new_entropy, Decimal.new("1.0")))
+
     clamped_temp = Decimal.max(Decimal.new("-1.0"), Decimal.min(new_temp, Decimal.new("1.0")))
 
     {clamped_entropy, clamped_temp}

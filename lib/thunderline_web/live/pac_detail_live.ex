@@ -56,6 +56,7 @@ defmodule ThunderlineWeb.PacDetailLive do
   @impl true
   def handle_info({:pac_updated, updated_pac_data}, socket) do
     current_pac_id = socket.assigns.pac_id
+
     if updated_pac_data.id == current_pac_id do
       # The PAC we are currently viewing has been updated.
       # Re-fetch its details, logs, and memory graph.
@@ -69,7 +70,9 @@ defmodule ThunderlineWeb.PacDetailLive do
         |> assign(:pac, pac)
         |> assign(:tick_logs, tick_logs)
         |> assign(:memory_graph, memory_graph)
-        |> assign_new(:page_title, fn -> if(pac, do: pac.name <> " Details", else: "PAC Detail") end)
+        |> assign_new(:page_title, fn ->
+          if(pac, do: pac.name <> " Details", else: "PAC Detail")
+        end)
 
       {:noreply, socket}
     else
@@ -111,8 +114,10 @@ defmodule ThunderlineWeb.PacDetailLive do
       # This is used to populate @pac.last_tick_result for the UI.
       updated_pac =
         socket.assigns.pac
-        |> Map.merge(agent_data) # agent_data contains general PAC attributes to update
-        |> Map.put(:last_tick_result, res) # res specifically contains the tick outcome details
+        # agent_data contains general PAC attributes to update
+        |> Map.merge(agent_data)
+        # res specifically contains the tick outcome details
+        |> Map.put(:last_tick_result, res)
 
       tick_logs = Log.for_agent_recent(socket.assigns.pac_id)
 

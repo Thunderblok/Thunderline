@@ -17,7 +17,8 @@ defmodule Thunderline.Tick.Producer do
 
   alias Thunderline.PAC.{Agent, Manager}
 
-  @default_tick_interval 30_000  # 30 seconds
+  # 30 seconds
+  @default_tick_interval 30_000
   @batch_size 20
 
   def start_link(opts) do
@@ -49,10 +50,7 @@ defmodule Thunderline.Tick.Producer do
     {events, remaining_buffer} = Enum.split(state.buffer, total_demand)
     remaining_demand = total_demand - length(events)
 
-    new_state = %{state |
-      demand: remaining_demand,
-      buffer: remaining_buffer
-    }
+    new_state = %{state | demand: remaining_demand, buffer: remaining_buffer}
 
     {:noreply, events, new_state}
   end
@@ -73,10 +71,11 @@ defmodule Thunderline.Tick.Producer do
     # Schedule next tick
     schedule_tick(state.tick_interval)
 
-    new_state = %{state |
-      tick_count: state.tick_count + 1,
-      demand: remaining_demand,
-      buffer: remaining_buffer
+    new_state = %{
+      state
+      | tick_count: state.tick_count + 1,
+        demand: remaining_demand,
+        buffer: remaining_buffer
     }
 
     # Emit telemetry
@@ -98,10 +97,7 @@ defmodule Thunderline.Tick.Producer do
     {events_to_send, remaining_buffer} = Enum.split(new_buffer, state.demand)
     remaining_demand = state.demand - length(events_to_send)
 
-    new_state = %{state |
-      demand: remaining_demand,
-      buffer: remaining_buffer
-    }
+    new_state = %{state | demand: remaining_demand, buffer: remaining_buffer}
 
     {:noreply, events_to_send, new_state}
   end
@@ -173,9 +169,11 @@ defmodule Thunderline.Tick.Producer do
     case :erlang.memory() do
       memory_info when is_list(memory_info) ->
         total = Keyword.get(memory_info, :total, 0)
-        div(total, 1024 * 1024)  # Convert to MB
+        # Convert to MB
+        div(total, 1024 * 1024)
 
-      _ -> 0
+      _ ->
+        0
     end
   end
 

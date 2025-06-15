@@ -1,5 +1,6 @@
 defmodule ThunderlineWeb.Router do
   use ThunderlineWeb, :router
+
   # use AshAuthentication.Phoenix.Router # Commented out until authentication is properly configured
   pipeline :browser do
     plug :accepts, ["html"]
@@ -15,6 +16,7 @@ defmodule ThunderlineWeb.Router do
     plug :accepts, ["json"]
     # plug :load_from_bearer # Commented out until authentication is configured
   end
+
   scope "/", ThunderlineWeb do
     pipe_through :browser
 

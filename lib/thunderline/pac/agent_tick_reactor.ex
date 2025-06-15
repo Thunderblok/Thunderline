@@ -9,7 +9,7 @@ defmodule Thunderline.PAC.AgentTickReactor do
   use Reactor
 
   # Input: agent struct from PAC.Agent
-  input :agent
+  input(:agent)
   # Step 1: Assess the agent's current context
   step :context_assessment do
     impl Thunderline.PAC.AgentTickSteps

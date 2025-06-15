@@ -10,7 +10,8 @@ defmodule ThunderlineWeb.PacDashboardLiveTest do
       name: "TestPAC-#{System.unique_integer([:positive])}",
       description: "A test PAC",
       traits: %{stubborn: true},
-      stats: %{"energy" => 75, "mood" => "curious"} # Ensure stats has expected keys
+      # Ensure stats has expected keys
+      stats: %{"energy" => 75, "mood" => "curious"}
     }
 
     final_attrs = Map.merge(default_attrs, attrs)
@@ -105,8 +106,10 @@ defmodule ThunderlineWeb.PacDashboardLiveTest do
 
       rendered_html = render(view)
       assert rendered_html =~ "Raw Ash Resource Dump: #{pac.name}"
-      assert rendered_html =~ inspect(pac.id) # Check if ID is in the dump
-      assert rendered_html =~ "analytical" # Check if a specific stat/mood is in the dump
+      # Check if ID is in the dump
+      assert rendered_html =~ inspect(pac.id)
+      # Check if a specific stat/mood is in the dump
+      assert rendered_html =~ "analytical"
       assert rendered_html =~ ":energy"
       assert rendered_html =~ "99"
     end

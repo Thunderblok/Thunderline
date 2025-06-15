@@ -3,7 +3,8 @@ defmodule ThunderlineWeb.PacDetailLiveTest do
 
   import Phoenix.LiveViewTest
   alias Thunderline.PAC.Agent
-  alias Thunderline.Tick.Log # Assuming this module exists for logs
+  # Assuming this module exists for logs
+  alias Thunderline.Tick.Log
 
   # Helper to create a PAC
   defp create_pac(attrs \\ %{}) do
@@ -12,8 +13,10 @@ defmodule ThunderlineWeb.PacDetailLiveTest do
       description: "A PAC for detail view testing",
       traits: %{curious: true, observant: true},
       stats: %{"energy" => 80, "fatigue" => 20, "creativity" => 60, "mood" => "focused"},
-      state: %{"mood" => "focused"} # Ensure state.mood is available
+      # Ensure state.mood is available
+      state: %{"mood" => "focused"}
     }
+
     final_attrs = Map.merge(default_attrs, attrs)
     {:ok, pac} = Agent.create(final_attrs)
     pac
@@ -27,6 +30,7 @@ defmodule ThunderlineWeb.PacDetailLiveTest do
       "actions" => [%{"type" => "test_action"}],
       "perception" => %{"stimuli" => ["test_stimulus"]}
     }
+
     log_data = Map.merge(default_data, data)
 
     # Assuming a function like this exists.
@@ -35,7 +39,8 @@ defmodule ThunderlineWeb.PacDetailLiveTest do
     # For now, creating a struct that matches what Log.for_agent_recent/1 might return.
     # This part might need adjustment based on actual Log implementation.
     %Thunderline.Tick.Log{
-      id: Ecto.UUID.generate(), # Or other ID type
+      # Or other ID type
+      id: Ecto.UUID.generate(),
       agent_id: pac.id,
       tick_number: System.unique_integer([:positive]),
       data: log_data,
@@ -80,14 +85,16 @@ defmodule ThunderlineWeb.PacDetailLiveTest do
       assert has_element?(view, "h1", pac.name)
 
       # Traits
-      assert has_element?(view, "#traits .bg-slate-700", "Fast learner") # Checks for formatted trait
+      # Checks for formatted trait
+      assert has_element?(view, "#traits .bg-slate-700", "Fast learner")
       assert has_element?(view, "#traits .bg-slate-700", "Cautious")
 
       # Stats
       assert has_element?(view, "#stats", "ENERGY")
       assert has_element?(view, "#stats", "FATIGUE")
       assert has_element?(view, "#stats", "CREATIVITY")
-      assert has_element?(view, "#stats .bg-sky-500") # Energy bar fill
+      # Energy bar fill
+      assert has_element?(view, "#stats .bg-sky-500")
 
       # Tick Logs (very basic check, as log creation is complex)
       # This part is highly dependent on how logs are actually created and fetched.

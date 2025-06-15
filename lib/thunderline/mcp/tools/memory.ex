@@ -12,21 +12,23 @@ defmodule Thunderline.MCP.Tools.Memory do
 
     case Manager.search(agent_id, query, limit: limit) do
       {:ok, results} ->
-        formatted_results = Enum.map(results, fn memory ->
-          %{
-            id: memory.id,
-            content: memory.content,
-            tags: memory.tags,
-            similarity_score: memory.similarity_score,
-            created_at: memory.created_at
-          }
-        end)
+        formatted_results =
+          Enum.map(results, fn memory ->
+            %{
+              id: memory.id,
+              content: memory.content,
+              tags: memory.tags,
+              similarity_score: memory.similarity_score,
+              created_at: memory.created_at
+            }
+          end)
 
-        {:ok, %{
-          query: query,
-          results: formatted_results,
-          count: length(formatted_results)
-        }}
+        {:ok,
+         %{
+           query: query,
+           results: formatted_results,
+           count: length(formatted_results)
+         }}
 
       {:error, reason} ->
         {:error, reason}
@@ -40,13 +42,14 @@ defmodule Thunderline.MCP.Tools.Memory do
 
     case Manager.store(agent_id, content, tags: tags) do
       {:ok, memory_node} ->
-        {:ok, %{
-          id: memory_node.id,
-          content: memory_node.content,
-          tags: memory_node.tags,
-          agent_id: memory_node.agent_id,
-          created_at: memory_node.created_at
-        }}
+        {:ok,
+         %{
+           id: memory_node.id,
+           content: memory_node.content,
+           tags: memory_node.tags,
+           agent_id: memory_node.agent_id,
+           created_at: memory_node.created_at
+         }}
 
       {:error, reason} ->
         {:error, reason}
@@ -59,25 +62,28 @@ defmodule Thunderline.MCP.Tools.Memory do
 
     case Manager.get_memory_graph(agent_id, depth: depth) do
       {:ok, graph} ->
-        {:ok, %{
-          agent_id: agent_id,
-          nodes: Enum.map(graph.nodes, fn node ->
-            %{
-              id: node.id,
-              content: node.content,
-              tags: node.tags,
-              importance: node.importance
-            }
-          end),
-          edges: Enum.map(graph.edges, fn edge ->
-            %{
-              from: edge.from_id,
-              to: edge.to_id,
-              relationship: edge.relationship,
-              strength: edge.strength
-            }
-          end)
-        }}
+        {:ok,
+         %{
+           agent_id: agent_id,
+           nodes:
+             Enum.map(graph.nodes, fn node ->
+               %{
+                 id: node.id,
+                 content: node.content,
+                 tags: node.tags,
+                 importance: node.importance
+               }
+             end),
+           edges:
+             Enum.map(graph.edges, fn edge ->
+               %{
+                 from: edge.from_id,
+                 to: edge.to_id,
+                 relationship: edge.relationship,
+                 strength: edge.strength
+               }
+             end)
+         }}
 
       {:error, reason} ->
         {:error, reason}

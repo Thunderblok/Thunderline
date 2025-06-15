@@ -14,15 +14,16 @@ defmodule Thunderline.MCP.Tools.PACAgent do
 
     case Manager.create_agent(name, zone_id, opts) do
       {:ok, agent} ->
-        {:ok, %{
-          id: agent.id,
-          name: agent.name,
-          description: agent.description,
-          zone_id: agent.zone_id,
-          stats: agent.stats,
-          traits: agent.traits,
-          state: agent.state
-        }}
+        {:ok,
+         %{
+           id: agent.id,
+           name: agent.name,
+           description: agent.description,
+           zone_id: agent.zone_id,
+           stats: agent.stats,
+           traits: agent.traits,
+           state: agent.state
+         }}
 
       {:error, reason} ->
         {:error, reason}
@@ -34,29 +35,34 @@ defmodule Thunderline.MCP.Tools.PACAgent do
 
     case Manager.get_agent(agent_id) do
       {:ok, agent} ->
-        {:ok, %{
-          id: agent.id,
-          name: agent.name,
-          description: agent.description,
-          zone_id: agent.zone_id,
-          stats: agent.stats,
-          traits: agent.traits,
-          state: agent.state,
-          zone: if(agent.zone, do: %{
-            id: agent.zone.id,
-            name: agent.zone.name,
-            properties: agent.zone.properties
-          }),
-          mods: Enum.map(agent.mods || [], fn mod ->
-            %{
-              id: mod.id,
-              name: mod.name,
-              type: mod.mod_type,
-              active: mod.active,
-              effects: mod.effects
-            }
-          end)
-        }}
+        {:ok,
+         %{
+           id: agent.id,
+           name: agent.name,
+           description: agent.description,
+           zone_id: agent.zone_id,
+           stats: agent.stats,
+           traits: agent.traits,
+           state: agent.state,
+           zone:
+             if(agent.zone,
+               do: %{
+                 id: agent.zone.id,
+                 name: agent.zone.name,
+                 properties: agent.zone.properties
+               }
+             ),
+           mods:
+             Enum.map(agent.mods || [], fn mod ->
+               %{
+                 id: mod.id,
+                 name: mod.name,
+                 type: mod.mod_type,
+                 active: mod.active,
+                 effects: mod.effects
+               }
+             end)
+         }}
 
       {:error, reason} ->
         {:error, reason}
@@ -69,14 +75,15 @@ defmodule Thunderline.MCP.Tools.PACAgent do
 
     case Manager.update_agent(agent_id, changes) do
       {:ok, agent} ->
-        {:ok, %{
-          id: agent.id,
-          name: agent.name,
-          stats: agent.stats,
-          traits: agent.traits,
-          state: agent.state,
-          updated_at: agent.updated_at
-        }}
+        {:ok,
+         %{
+           id: agent.id,
+           name: agent.name,
+           stats: agent.stats,
+           traits: agent.traits,
+           state: agent.state,
+           updated_at: agent.updated_at
+         }}
 
       {:error, reason} ->
         {:error, reason}
@@ -88,13 +95,14 @@ defmodule Thunderline.MCP.Tools.PACAgent do
 
     case Manager.tick_agent(agent_id) do
       {:ok, agent} ->
-        {:ok, %{
-          id: agent.id,
-          name: agent.name,
-          stats: agent.stats,
-          state: agent.state,
-          tick_processed: true
-        }}
+        {:ok,
+         %{
+           id: agent.id,
+           name: agent.name,
+           stats: agent.stats,
+           state: agent.state,
+           tick_processed: true
+         }}
 
       {:error, reason} ->
         {:error, reason}

@@ -19,13 +19,14 @@ defmodule Thunderline.MCP.Server do
 
   def init(_opts) do
     # Start the MCP server on the configured port
-    {:ok, listener} = :ranch.start_listener(
-      :mcp_server,
-      :ranch_tcp,
-      [{:port, @mcp_port}],
-      Thunderline.MCP.ProtocolHandler,
-      []
-    )
+    {:ok, listener} =
+      :ranch.start_listener(
+        :mcp_server,
+        :ranch_tcp,
+        [{:port, @mcp_port}],
+        Thunderline.MCP.ProtocolHandler,
+        []
+      )
 
     Logger.info("MCP Server started on port #{@mcp_port}")
 

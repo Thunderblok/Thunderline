@@ -8,7 +8,8 @@ defmodule Thunderline.AgentCore.ContextAssessor do
   alias Thunderline.PAC.Agent
 
   # Types might need to be more specific based on actual Agent struct, etc.
-  @type agent :: Agent.t() | map() # Assuming Agent.t() or a map representation
+  # Assuming Agent.t() or a map representation
+  @type agent :: Agent.t() | map()
   @type zone_context :: map()
   @type memories :: list(map())
   @type tools :: list(String.t())
@@ -17,13 +18,13 @@ defmodule Thunderline.AgentCore.ContextAssessor do
   @type context_map :: map()
   @type metadata :: map()
 
-  @spec run(agent(), zone_context(), memories(), tools(), tick_count(), federation_context()) :: {:ok, {context_map(), metadata()}} | {:error, any()}
+  @spec run(agent(), zone_context(), memories(), tools(), tick_count(), federation_context()) ::
+          {:ok, {context_map(), metadata()}} | {:error, any()}
   def run(agent, zone_context, memories, tools, tick_count, federation_context) do
     with {:ok, situation_analysis} <- analyze_situation(agent, zone_context),
          {:ok, needs_assessment} <- assess_needs(agent, tick_count),
          {:ok, memory_relevance} <- evaluate_memories(memories, agent),
          {:ok, capability_map} <- map_capabilities(tools, agent) do
-
       assessment = %{
         situation: situation_analysis,
         needs: needs_assessment,
@@ -79,7 +80,8 @@ defmodule Thunderline.AgentCore.ContextAssessor do
       memories
       |> Enum.map(&score_memory_relevance(&1, agent))
       |> Enum.sort_by(& &1.relevance_score, :desc)
-      |> Enum.take(5)  # Keep top 5 most relevant
+      # Keep top 5 most relevant
+      |> Enum.take(5)
 
     {:ok, scored_memories}
   end
@@ -132,8 +134,8 @@ defmodule Thunderline.AgentCore.ContextAssessor do
       }
     end)
   end
-  defp evaluate_goal_progress(_), do: []
 
+  defp evaluate_goal_progress(_), do: []
 
   defp assess_social_needs(social_stat, tick_count) do
     %{
@@ -192,23 +194,26 @@ defmodule Thunderline.AgentCore.ContextAssessor do
   defp infer_preferred_tools(traits, stats) do
     preferences = []
 
-    preferences = if Enum.member?(traits, "analytical") or stats["intelligence"] > 70 do
-      ["analysis_tools", "data_tools" | preferences]
-    else
-      preferences
-    end
+    preferences =
+      if Enum.member?(traits, "analytical") or stats["intelligence"] > 70 do
+        ["analysis_tools", "data_tools" | preferences]
+      else
+        preferences
+      end
 
-    preferences = if Enum.member?(traits, "creative") or stats["creativity"] > 70 do
-      ["creative_tools", "generation_tools" | preferences]
-    else
-      preferences
-    end
+    preferences =
+      if Enum.member?(traits, "creative") or stats["creativity"] > 70 do
+        ["creative_tools", "generation_tools" | preferences]
+      else
+        preferences
+      end
 
-    preferences = if Enum.member?(traits, "social") or stats["social"] > 70 do
-      ["communication_tools", "collaboration_tools" | preferences]
-    else
-      preferences
-    end
+    preferences =
+      if Enum.member?(traits, "social") or stats["social"] > 70 do
+        ["communication_tools", "collaboration_tools" | preferences]
+      else
+        preferences
+      end
 
     preferences
   end
@@ -234,7 +239,8 @@ defmodule Thunderline.AgentCore.ContextAssessor do
 
   defp calculate_recency_score(%DateTime{} = timestamp) do
     hours_ago = DateTime.diff(DateTime.utc_now(), timestamp, :hour)
-    max(0.0, 0.3 - (hours_ago * 0.01))  # Decay over time
+    # Decay over time
+    max(0.0, 0.3 - hours_ago * 0.01)
   end
 
   defp calculate_recency_score(_), do: 0.0
@@ -246,23 +252,28 @@ defmodule Thunderline.AgentCore.ContextAssessor do
   defp calculate_topic_relevance(memory_tags, current_activity) when is_list(memory_tags) do
     if Enum.member?(memory_tags, current_activity), do: 0.3, else: 0.0
   end
+
   defp calculate_topic_relevance(_, _), do: 0.0
 
   defp calculate_isolation_duration(tick_count) when is_integer(tick_count) do
     # Estimate isolation based on tick count (simplified)
     max(0, tick_count - 10)
   end
+
   defp calculate_isolation_duration(_), do: 0
 
-
-  defp is_tool_applicable?(tool, traits, stats, state) when is_list(traits) and is_map(stats) and is_map(state) do
+  defp is_tool_applicable?(tool, traits, stats, state)
+       when is_list(traits) and is_map(stats) and is_map(state) do
     # Simple applicability check based on tool and agent characteristics
     case tool do
       "communication" -> Enum.member?(traits, "social") or stats["social"] > 50
       "analysis" -> Enum.member?(traits, "analytical") or stats["intelligence"] > 60
       "creative" -> Enum.member?(traits, "creative") or stats["creativity"] > 60
-      _ -> true  # Default tools are always applicable
+      # Default tools are always applicable
+      _ -> true
     end
   end
-  defp is_tool_applicable?(_, _, _, _), do: true # Fallback for mismatched types
+
+  # Fallback for mismatched types
+  defp is_tool_applicable?(_, _, _, _), do: true
 end

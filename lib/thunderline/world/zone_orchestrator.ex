@@ -20,7 +20,11 @@ defmodule Thunderline.World.ZoneOrchestrator do
   alias Thunderline.Domain
 
   # Zone tock interval - every 30 seconds by default
-  @tick_interval_ms Application.compile_env(:thunderline, [:zone_orchestrator, :tick_interval], 30_000)
+  @tick_interval_ms Application.compile_env(
+                      :thunderline,
+                      [:zone_orchestrator, :tick_interval],
+                      30_000
+                    )
 
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
@@ -30,12 +34,13 @@ defmodule Thunderline.World.ZoneOrchestrator do
     Logger.info("ZoneOrchestrator starting with #{@tick_interval_ms}ms tock interval")
     schedule_tock()
 
-    {:ok, %{
-      tock_count: 0,
-      last_tock: DateTime.utc_now(),
-      zones_updated: 0,
-      events_generated: 0
-    }}
+    {:ok,
+     %{
+       tock_count: 0,
+       last_tock: DateTime.utc_now(),
+       zones_updated: 0,
+       events_generated: 0
+     }}
   end
 
   # Client API
@@ -70,14 +75,17 @@ defmodule Thunderline.World.ZoneOrchestrator do
     schedule_tock()
 
     new_state = %{
-      state |
-      tock_count: state.tock_count + 1,
-      last_tock: DateTime.utc_now(),
-      zones_updated: zones_updated,
-      events_generated: events_generated
+      state
+      | tock_count: state.tock_count + 1,
+        last_tock: DateTime.utc_now(),
+        zones_updated: zones_updated,
+        events_generated: events_generated
     }
 
-    Logger.debug("Tock cycle complete: #{zones_updated} zones updated, #{events_generated} events generated")
+    Logger.debug(
+      "Tock cycle complete: #{zones_updated} zones updated, #{events_generated} events generated"
+    )
+
     {:noreply, new_state}
   end
 
@@ -86,9 +94,9 @@ defmodule Thunderline.World.ZoneOrchestrator do
     {zones_updated, events_generated} = update_all_zones()
 
     new_state = %{
-      state |
-      zones_updated: zones_updated,
-      events_generated: events_generated
+      state
+      | zones_updated: zones_updated,
+        events_generated: events_generated
     }
 
     {:noreply, new_state}
@@ -125,23 +133,24 @@ defmodule Thunderline.World.ZoneOrchestrator do
     zones_updated = 0
     events_generated = 0
 
-    {updated_count, event_count} = zones
-    |> Enum.reduce({0, 0}, fn zone, {zone_acc, event_acc} ->
-      case tick_zone(zone) do
-        {:ok, updated_zone, had_event?} ->
-          # Broadcast zone update
-          broadcast_zone_update(updated_zone)
+    {updated_count, event_count} =
+      zones
+      |> Enum.reduce({0, 0}, fn zone, {zone_acc, event_acc} ->
+        case tick_zone(zone) do
+          {:ok, updated_zone, had_event?} ->
+            # Broadcast zone update
+            broadcast_zone_update(updated_zone)
 
-          # Apply diffusion effects to neighboring zones
-          apply_diffusion_effects(updated_zone, zones)
+            # Apply diffusion effects to neighboring zones
+            apply_diffusion_effects(updated_zone, zones)
 
-          {zone_acc + 1, event_acc + (if had_event?, do: 1, else: 0)}
+            {zone_acc + 1, event_acc + if(had_event?, do: 1, else: 0)}
 
-        {:error, reason} ->
-          Logger.warning("Failed to update zone #{zone.id}: #{inspect(reason)}")
-          {zone_acc, event_acc}
-      end
-    end)
+          {:error, reason} ->
+            Logger.warning("Failed to update zone #{zone.id}: #{inspect(reason)}")
+            {zone_acc, event_acc}
+        end
+      end)
 
     {updated_count, event_count}
   end
@@ -156,15 +165,18 @@ defmodule Thunderline.World.ZoneOrchestrator do
 
     # Update zone
     case Domain.update(zone, %{
-      event: new_event,
-      entropy: new_entropy,
-      temperature: new_temp,
-      last_updated_at: DateTime.utc_now()
-    }) do
+           event: new_event,
+           entropy: new_entropy,
+           temperature: new_temp,
+           last_updated_at: DateTime.utc_now()
+         }) do
       {:ok, updated_zone} ->
         if had_event? do
-          Logger.debug("Zone #{inspect(zone.coords)} generated event: #{Map.get(new_event, "type")}")
+          Logger.debug(
+            "Zone #{inspect(zone.coords)} generated event: #{Map.get(new_event, "type")}"
+          )
         end
+
         {:ok, updated_zone, had_event?}
 
       {:error, reason} ->
@@ -177,25 +189,27 @@ defmodule Thunderline.World.ZoneOrchestrator do
     Phoenix.PubSub.broadcast(
       Thunderline.PubSub,
       "zone:#{zone.id}",
-      {:zone_updated, %{
-        zone_id: zone.id,
-        coords: zone.coords,
-        event: zone.event,
-        entropy: zone.entropy,
-        temperature: zone.temperature,
-        last_updated_at: zone.last_updated_at
-      }}
+      {:zone_updated,
+       %{
+         zone_id: zone.id,
+         coords: zone.coords,
+         event: zone.event,
+         entropy: zone.entropy,
+         temperature: zone.temperature,
+         last_updated_at: zone.last_updated_at
+       }}
     )
 
     # Broadcast to global zones topic
     Phoenix.PubSub.broadcast(
       Thunderline.PubSub,
       "zones:all",
-      {:zone_tock, %{
-        zone_id: zone.id,
-        coords: zone.coords,
-        event: zone.event
-      }}
+      {:zone_tock,
+       %{
+         zone_id: zone.id,
+         coords: zone.coords,
+         event: zone.event
+       }}
     )
   end
 
@@ -221,7 +235,7 @@ defmodule Thunderline.World.ZoneOrchestrator do
 
     Enum.filter(all_zones, fn zone ->
       zone.id != source_zone.id and
-      coords_adjacent?(source_coords, zone.coords)
+        coords_adjacent?(source_coords, zone.coords)
     end)
   end
 
@@ -263,17 +277,20 @@ defmodule Thunderline.World.ZoneOrchestrator do
     new_temp = Decimal.from_float(current_temp + temp_change)
 
     # Clamp values
-    clamped_entropy = Decimal.max(Decimal.new("0.0"), Decimal.min(new_entropy, Decimal.new("1.0")))
+    clamped_entropy =
+      Decimal.max(Decimal.new("0.0"), Decimal.min(new_entropy, Decimal.new("1.0")))
+
     clamped_temp = Decimal.max(Decimal.new("-1.0"), Decimal.min(new_temp, Decimal.new("1.0")))
 
     # Update zone if changes are significant
     if abs(entropy_change) > 0.01 or abs(temp_change) > 0.01 do
       case Domain.update(zone, %{
-        entropy: clamped_entropy,
-        temperature: clamped_temp
-      }) do
+             entropy: clamped_entropy,
+             temperature: clamped_temp
+           }) do
         {:ok, _updated_zone} ->
           :ok
+
         {:error, reason} ->
           Logger.debug("Failed to apply diffusion to zone #{zone.id}: #{inspect(reason)}")
       end

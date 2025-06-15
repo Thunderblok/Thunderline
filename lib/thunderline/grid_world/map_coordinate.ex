@@ -63,20 +63,39 @@ defmodule Thunderline.GridWorld.MapCoordinate do
 
     create :create do
       accept [
-        :latitude, :longitude, :altitude,
-        :grid_x, :grid_y, :grid_z,
-        :tick_id, :region_id, :zone_id,
-        :place_id, :google_maps_uri, :formatted_address,
-        :pac_id, :coordinate_type, :accuracy_meters, :metadata
+        :latitude,
+        :longitude,
+        :altitude,
+        :grid_x,
+        :grid_y,
+        :grid_z,
+        :tick_id,
+        :region_id,
+        :zone_id,
+        :place_id,
+        :google_maps_uri,
+        :formatted_address,
+        :pac_id,
+        :coordinate_type,
+        :accuracy_meters,
+        :metadata
       ]
     end
 
     update :update do
       accept [
-        :latitude, :longitude, :altitude,
-        :grid_x, :grid_y, :grid_z,
-        :tick_id, :place_id, :google_maps_uri,
-        :formatted_address, :accuracy_meters, :metadata
+        :latitude,
+        :longitude,
+        :altitude,
+        :grid_x,
+        :grid_y,
+        :grid_z,
+        :tick_id,
+        :place_id,
+        :google_maps_uri,
+        :formatted_address,
+        :accuracy_meters,
+        :metadata
       ]
     end
 
@@ -105,6 +124,7 @@ defmodule Thunderline.GridWorld.MapCoordinate do
       filter expr(timestamp >= ^arg(:since))
     end
   end
+
   code_interface do
     domain Thunderline.Domain
 
@@ -151,7 +171,9 @@ defmodule Thunderline.GridWorld.MapCoordinate do
 
   @doc """
   Calculates distance between two coordinates in meters.
-  """  # def distance_meters(%__MODULE__{} = coord1, %__MODULE__{} = coord2) do
+  """
+
+  # def distance_meters(%__MODULE__{} = coord1, %__MODULE__{} = coord2) do
   #   haversine_distance(coord1.latitude, coord1.longitude, coord2.latitude, coord2.longitude)
   # end
 
@@ -161,16 +183,18 @@ defmodule Thunderline.GridWorld.MapCoordinate do
 
   defp haversine_distance(lat1, lng1, lat2, lng2) do
     # Haversine formula for calculating distance between two GPS points
-    r = 6371000  # Earth's radius in meters
+    # Earth's radius in meters
+    r = 6_371_000
 
     lat1_rad = lat1 * :math.pi() / 180
     lat2_rad = lat2 * :math.pi() / 180
     delta_lat = (lat2 - lat1) * :math.pi() / 180
     delta_lng = (lng2 - lng1) * :math.pi() / 180
 
-    a = :math.sin(delta_lat / 2) * :math.sin(delta_lat / 2) +
+    a =
+      :math.sin(delta_lat / 2) * :math.sin(delta_lat / 2) +
         :math.cos(lat1_rad) * :math.cos(lat2_rad) *
-        :math.sin(delta_lng / 2) * :math.sin(delta_lng / 2)
+          :math.sin(delta_lng / 2) * :math.sin(delta_lng / 2)
 
     c = 2 * :math.atan2(:math.sqrt(a), :math.sqrt(1 - a))
 
@@ -191,7 +215,8 @@ defmodule Thunderline.GridWorld.MapCoordinate do
   @doc """
   Calculate movement vector from one coordinate to another in 3D grid space.
   """
-  def movement_vector_3d(coord1, coord2) do    vec1 = Vec3.create(coord1.grid_x, coord1.grid_y, coord1.grid_z)
+  def movement_vector_3d(coord1, coord2) do
+    vec1 = Vec3.create(coord1.grid_x, coord1.grid_y, coord1.grid_z)
     vec2 = Vec3.create(coord2.grid_x, coord2.grid_y, coord2.grid_z)
     direction = Vec3.subtract(vec2, vec1)
     normalized = Vec3.normalize(direction)

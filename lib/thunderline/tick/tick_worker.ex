@@ -37,7 +37,6 @@ defmodule Thunderline.Tick.TickWorker do
     with {:ok, agent} <- load_agent(agent_id),
          {:ok, result} <- AgentTickReactor.run(%{agent: agent}),
          {:ok, _log} <- create_enhanced_tick_log(agent, result, broadway_metadata) do
-
       # Notify orchestrator of completion
       notify_tick_completion(agent_id, result)
 
@@ -77,6 +76,7 @@ defmodule Thunderline.Tick.TickWorker do
         {:error, reason}
     end
   end
+
   # Enhanced tick logging for Reactor-based results
 
   defp extract_broadway_metadata(job) do
@@ -91,6 +91,7 @@ defmodule Thunderline.Tick.TickWorker do
       inserted_at: job.inserted_at
     }
   end
+
   defp create_enhanced_tick_log(agent, reactor_result, broadway_metadata) do
     # Extract information from Reactor result structure
     action_result = Map.get(reactor_result, :action_result, %{})
@@ -111,7 +112,8 @@ defmodule Thunderline.Tick.TickWorker do
       state_changes: calculate_state_changes(agent, agent_updates),
       memories_formed: 1,
       narrative: Map.get(memory_data, :memory_content, "Agent completed tick cycle"),
-      ai_response_time_ms: 0,  # TODO: Add timing
+      # TODO: Add timing
+      ai_response_time_ms: 0,
       broadway_metadata: broadway_metadata,
       errors: []
     }
@@ -128,6 +130,7 @@ defmodule Thunderline.Tick.TickWorker do
       _ -> 1
     end
   end
+
   defp calculate_state_changes(old_agent, new_agent) do
     old_stats = old_agent.stats || %{}
     new_stats = Map.get(new_agent, :stats, old_stats)

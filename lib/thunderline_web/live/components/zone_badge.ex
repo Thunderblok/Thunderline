@@ -5,13 +5,15 @@ defmodule ThunderlineWeb.Components.ZoneBadge do
   def render(assigns) do
     ~H"""
     <div id={@id} class="zone-badge">
-      <span class="event-icon"><%= display_event_icon(@zone_event) %></span>
-      <span class="entropy-value">E: <%= @entropy || "N/A" %></span>
+      <span class="event-icon">{display_event_icon(@zone_event)}</span>
+      <span class="entropy-value">E: {@entropy || "N/A"}</span>
     </div>
     """
   end
 
-  defp display_event_icon(nil), do: "❓" # Default for no event
+  # Default for no event
+  defp display_event_icon(nil), do: "❓"
+
   defp display_event_icon(zone_event) do
     # Assuming zone_event is a map with a :type or similar key
     # This can be expanded with more event types and icons
@@ -21,7 +23,8 @@ defmodule ThunderlineWeb.Components.ZoneBadge do
       :stable -> "✅"
       :energy_spike -> "⚡"
       :comms_disruption -> "📡"
-      _ -> "❓" # Default for unknown event type
+      # Default for unknown event type
+      _ -> "❓"
     end
   end
 end

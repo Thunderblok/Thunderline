@@ -34,7 +34,9 @@ defmodule Thunderline.AI.AgentContext do
 
     create :create do
       accept [:agent_traits, :zone_data, :top_memories, :current_stats, :recent_interactions]
-    end    # Simplified action for context assessment - using mock implementation for now
+    end
+
+    # Simplified action for context assessment - using mock implementation for now
     action :assess_context, :struct do
       description "Analyze agent's current context and determine emotional state and motivations"
 
@@ -46,14 +48,15 @@ defmodule Thunderline.AI.AgentContext do
 
       run fn input, _context ->
         # Mock implementation - replace with actual AI prompt later
-        {:ok, %{
-          summary: "Agent is in a stable state with moderate energy levels",
-          emotional_state: "curious and alert",
-          motivations: ["explore surroundings", "maintain social connections"],
-          priorities: ["assess immediate environment", "plan next action"],
-          environmental_factors: %{weather: "clear", activity_level: "moderate"},
-          confidence_level: Decimal.new("0.8")
-        }}
+        {:ok,
+         %{
+           summary: "Agent is in a stable state with moderate energy levels",
+           emotional_state: "curious and alert",
+           motivations: ["explore surroundings", "maintain social connections"],
+           priorities: ["assess immediate environment", "plan next action"],
+           environmental_factors: %{weather: "clear", activity_level: "moderate"},
+           confidence_level: Decimal.new("0.8")
+         }}
       end
     end
   end
@@ -61,7 +64,9 @@ defmodule Thunderline.AI.AgentContext do
   code_interface do
     domain Thunderline.Domain
 
-    define :assess_context, args: [:agent_traits, :zone_data, :top_memories, :current_stats, :recent_interactions]
+    define :assess_context,
+      args: [:agent_traits, :zone_data, :top_memories, :current_stats, :recent_interactions]
+
     define :create
   end
 end

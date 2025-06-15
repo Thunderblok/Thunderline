@@ -42,14 +42,16 @@ defmodule Thunderline.MixProject do
       {:ash, "~> 3.0"},
       {:ash_phoenix, "~> 2.0"},
       {:ash_postgres, "~> 2.0"},
-      {:ash_json_api, "~> 1.0"},      # Authentication (temporarily disabled on Windows)
+      # Authentication (temporarily disabled on Windows)
+      {:ash_json_api, "~> 1.0"},
       # {:ash_authentication, "~> 4.0"},
       # {:ash_authentication_phoenix, "~> 2.0"},# Job Processing & Stream Processing
       {:oban, "~> 2.17"},
       {:oban_web, "~> 2.10"},
       {:broadway, "~> 1.0"},
       {:broadway_sqs, "~> 0.7", optional: true},
-      {:gen_stage, "~> 1.0"},      # HTTP Client & JSON
+      # HTTP Client & JSON
+      {:gen_stage, "~> 1.0"},
       {:req, "~> 0.5.0"},
       {:jason, "~> 1.2"},
 

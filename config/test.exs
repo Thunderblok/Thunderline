@@ -43,6 +43,7 @@ config :thunderline, :ai,
 
 # Fast tick interval for testing
 config :thunderline, :pac,
-  tick_interval: 1000,  # 1 second
+  # 1 second
+  tick_interval: 1000,
   default_zone_size: 10,
   max_agents_per_zone: 5

@@ -1,117 +1,189 @@
 <div class="font-mono text-gray-300 bg-black p-6 min-h-screen">
-  <h1 class="text-3xl mb-6 text-cyan-400"><%= @page_title %></h1>
-
+  <h1 class="text-3xl mb-6 text-cyan-400">{@page_title}</h1>
+  
   <div :if={@loading} class="flex justify-center items-center h-64">
     <p class="text-xl text-lime-400 animate-pulse">Loading PAC Details...</p>
   </div>
-
+  
   <div :if={!@loading and is_nil(@pac)} class="flex flex-col items-center justify-center h-64">
     <p class="text-2xl text-red-500 mb-4">PAC Not Found</p>
-    <p class="text-gray-400">The requested PAC with ID <span class="font-semibold text-yellow-400"><%= @pac_id %></span> could not be loaded or does not exist.</p>
-    <.link href={~p"/dashboard"} class="mt-6 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors">
+    
+    <p class="text-gray-400">
+      The requested PAC with ID <span class="font-semibold text-yellow-400">{@pac_id}</span>
+      could not be loaded or does not exist.
+    </p>
+    
+    <.link
+      href={~p"/dashboard"}
+      class="mt-6 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+    >
       Return to Dashboard
     </.link>
   </div>
-
+  
   <div :if={!@loading and @pac} class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <!-- Left Column: Animated Glyph & Traits -->
     <div class="md:col-span-1 space-y-6">
-      <div id="animated-glyph" class="border border-green-500 p-4 h-48 flex items-center justify-center rounded-md bg-slate-900 shadow-inner">
-        <svg class="w-24 h-24 text-lime-400 animate-pulse" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M50 10 L90 50 L50 90 L10 50 Z" stroke="currentColor" stroke-width="4" filter="url(#glow)" />
-          <circle cx="50" cy="50" r="10" fill="currentColor" filter="url(#glow)" />
+      <div
+        id="animated-glyph"
+        class="border border-green-500 p-4 h-48 flex items-center justify-center rounded-md bg-slate-900 shadow-inner"
+      >
+        <svg
+          class="w-24 h-24 text-lime-400 animate-pulse"
+          viewBox="0 0 100 100"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M50 10 L90 50 L50 90 L10 50 Z"
+            stroke="currentColor"
+            stroke-width="4"
+            filter="url(#glow)"
+          /> <circle cx="50" cy="50" r="10" fill="currentColor" filter="url(#glow)" />
           <defs>
             <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+              <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
               <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
+                <feMergeNode in="coloredBlur" /> <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
         </svg>
       </div>
-
+      
       <div id="traits" class="border border-green-500 p-4 rounded-md bg-slate-900">
         <h2 class="text-xl mb-3 text-lime-400">Traits</h2>
+        
         <div class="flex flex-wrap gap-2">
           <.each :let={trait_key} id={"trait-#{trait_key}"} items={Map.keys(@pac.traits || %{})}>
             <span class="bg-slate-700 text-sky-300 px-3 py-1 text-sm rounded-md border border-slate-600 shadow-sm">
-              <%= Atom.to_string(trait_key) |> String.replace("_", " ") |> String.capitalize() %>
+              {Atom.to_string(trait_key) |> String.replace("_", " ") |> String.capitalize()}
             </span>
           </.each>
-          <p :if={Map.empty?(@pac.traits || %{})} class="text-gray-500 italic">No traits defined.</p>
+          
+          <p :if={Map.empty?(@pac.traits || %{})} class="text-gray-500 italic">
+            No traits defined.
+          </p>
         </div>
       </div>
     </div>
-
-    <!-- Middle Column: Stats & Memory Cloud -->
+    
+<!-- Middle Column: Stats & Memory Cloud -->
     <div class="md:col-span-1 space-y-6">
       <div id="stats" class="border border-green-500 p-4 rounded-md bg-slate-900">
         <h2 class="text-xl mb-3 text-lime-400">Stats</h2>
+        
         <div class="space-y-4">
           <div>
             <div class="flex justify-between text-sm mb-1 text-gray-400">
               <span>ENERGY</span>
-              <span class="text-sky-400 font-semibold"><%= @pac.stats["energy"] || 0 %>%</span>
+              <span class="text-sky-400 font-semibold">{@pac.stats["energy"] || 0}%</span>
             </div>
+            
             <div class="w-full bg-slate-800 h-5 border border-slate-700 rounded-sm overflow-hidden shadow-inner">
-              <div class="bg-sky-500 h-full transition-all duration-500 ease-in-out" style={"width: #{@pac.stats["energy"] || 0}%;"}></div>
+              <div
+                class="bg-sky-500 h-full transition-all duration-500 ease-in-out"
+                style={"width: #{@pac.stats["energy"] || 0}%;"}
+              >
+              </div>
             </div>
           </div>
+          
           <div>
             <div class="flex justify-between text-sm mb-1 text-gray-400">
               <span>FATIGUE</span>
-              <span class="text-amber-400 font-semibold"><%= @pac.stats["fatigue"] || 0 %>%</span>
+              <span class="text-amber-400 font-semibold">{@pac.stats["fatigue"] || 0}%</span>
             </div>
+            
             <div class="w-full bg-slate-800 h-5 border border-slate-700 rounded-sm overflow-hidden shadow-inner">
-              <div class="bg-amber-500 h-full transition-all duration-500 ease-in-out" style={"width: #{@pac.stats["fatigue"] || 0}%;"}></div>
+              <div
+                class="bg-amber-500 h-full transition-all duration-500 ease-in-out"
+                style={"width: #{@pac.stats["fatigue"] || 0}%;"}
+              >
+              </div>
             </div>
           </div>
+          
           <div>
             <div class="flex justify-between text-sm mb-1 text-gray-400">
               <span>CREATIVITY</span>
-              <span class="text-violet-400 font-semibold"><%= @pac.stats["creativity"] || 0 %>%</span>
+              <span class="text-violet-400 font-semibold">{@pac.stats["creativity"] || 0}%</span>
             </div>
+            
             <div class="w-full bg-slate-800 h-5 border border-slate-700 rounded-sm overflow-hidden shadow-inner">
-              <div class="bg-violet-500 h-full transition-all duration-500 ease-in-out" style={"width: #{@pac.stats["creativity"] || 0}%;"}></div>
+              <div
+                class="bg-violet-500 h-full transition-all duration-500 ease-in-out"
+                style={"width: #{@pac.stats["creativity"] || 0}%;"}
+              >
+              </div>
             </div>
           </div>
         </div>
       </div>
-
+      
       <div id="memory-cloud" class="border border-green-500 p-4 rounded-md bg-slate-900">
         <h2 class="text-xl mb-3 text-lime-400">Memory Cloud</h2>
+        
         <div class="text-sm text-gray-400 space-y-1">
           <p>Status: <span class="text-green-300">Nominal</span></p>
-          <p>Nodes: <span class="text-cyan-300"><%= Enum.count(@memory_graph[:nodes] || []) %></span></p>
-          <p>Edges: <span class="text-cyan-300"><%= Enum.count(@memory_graph[:edges] || []) %></span></p>
+          
+          <p>
+            Nodes: <span class="text-cyan-300">{Enum.count(@memory_graph[:nodes] || [])}</span>
+          </p>
+          
+          <p>
+            Edges: <span class="text-cyan-300">{Enum.count(@memory_graph[:edges] || [])}</span>
+          </p>
+          
           <details class="mt-2 text-xs cursor-pointer">
             <summary class="hover:text-lime-300">Show Raw Memory Graph</summary>
-            <pre class="bg-slate-950 text-gray-500 p-2 mt-1 rounded-sm overflow-auto max-h-60 border border-slate-700 shadow-inner"><%= inspect @memory_graph, pretty: true, limit: 100 %></pre>
+             <pre class="bg-slate-950 text-gray-500 p-2 mt-1 rounded-sm overflow-auto max-h-60 border border-slate-700 shadow-inner"><%= inspect @memory_graph, pretty: true, limit: 100 %></pre>
           </details>
         </div>
       </div>
-
+      
       <div id="last-zone-interaction" class="border border-green-500 p-4 rounded-md bg-slate-900">
         <h2 class="text-xl mb-3 text-lime-400">Last Zone Interaction</h2>
+        
         <div :if={@pac.last_tick_result} class="text-sm text-gray-400 space-y-1">
-          <p>Type: <span class="text-sky-300"><%= @pac.last_tick_result["interaction_type"] || "N/A" %></span></p>
-          <p>Zone ID: <span class="text-cyan-300"><%= @pac.last_tick_result["zone_id"] || "N/A" %></span></p>
-          <p>Target ID: <span class="text-cyan-300"><%= @pac.last_tick_result["target_id"] || "N/A" %></span></p>
-          <p>Outcome: <span class="text-yellow-300"><%= @pac.last_tick_result["outcome"] || "N/A" %></span></p>
+          <p>
+            Type:
+            <span class="text-sky-300">{@pac.last_tick_result["interaction_type"] || "N/A"}</span>
+          </p>
+          
+          <p>
+            Zone ID:
+            <span class="text-cyan-300">{@pac.last_tick_result["zone_id"] || "N/A"}</span>
+          </p>
+          
+          <p>
+            Target ID:
+            <span class="text-cyan-300">{@pac.last_tick_result["target_id"] || "N/A"}</span>
+          </p>
+          
+          <p>
+            Outcome:
+            <span class="text-yellow-300">{@pac.last_tick_result["outcome"] || "N/A"}</span>
+          </p>
+          
           <details class="mt-2 text-xs cursor-pointer">
             <summary class="hover:text-lime-300">Show Full Result Details</summary>
-            <pre class="bg-slate-950 text-gray-500 p-2 mt-1 rounded-sm overflow-auto max-h-40 border border-slate-700 shadow-inner"><%= inspect @pac.last_tick_result, pretty: true, limit: :infinity %></pre>
+             <pre class="bg-slate-950 text-gray-500 p-2 mt-1 rounded-sm overflow-auto max-h-40 border border-slate-700 shadow-inner"><%= inspect @pac.last_tick_result, pretty: true, limit: :infinity %></pre>
           </details>
         </div>
-        <p :if={is_nil(@pac.last_tick_result)} class="text-gray-500 italic">No zone interaction data from last tick.</p>
+        
+        <p :if={is_nil(@pac.last_tick_result)} class="text-gray-500 italic">
+          No zone interaction data from last tick.
+        </p>
       </div>
     </div>
-
-    <!-- Right Column: Tick Logs -->
+    
+<!-- Right Column: Tick Logs -->
     <div class="md:col-span-1 border border-green-500 p-4 rounded-md bg-slate-900 max-h-[calc(100vh-4rem)] overflow-y-auto">
-      <h2 class="text-xl mb-3 text-lime-400 sticky top-0 bg-slate-900 py-2 z-10">Tick Log Timeline</h2>
+      <h2 class="text-xl mb-3 text-lime-400 sticky top-0 bg-slate-900 py-2 z-10">
+        Tick Log Timeline
+      </h2>
+      
       <ul class="space-y-3 text-sm">
         <.each :let={log} id={"log-item-" <> log.id} items={@tick_logs}>
           <.live_component
@@ -120,7 +192,10 @@
             tick_log={log}
           />
         </.each>
-        <p :if={Enum.empty?(@tick_logs)} class="text-gray-500 italic">No tick logs found for this agent.</p>
+        
+        <p :if={Enum.empty?(@tick_logs)} class="text-gray-500 italic">
+          No tick logs found for this agent.
+        </p>
       </ul>
     </div>
   </div>

@@ -15,17 +15,21 @@ defmodule Thunderline.Agents.Actions.FormMemory do
     pac_config = params[:pac_config]
     # 'context' in the schema refers to the tick_context for memory formation
     tick_context = params[:context]
-    previous_state = params[:previous_state] || %{} # Default from original schema
+    # Default from original schema
+    previous_state = params[:previous_state] || %{}
 
     # Ensure required parameters are present
     cond do
       is_nil(experience) ->
         {:error, "Missing required parameter: :experience"}
+
       is_nil(pac_config) ->
         {:error, "Missing required parameter: :pac_config"}
+
       is_nil(tick_context) ->
         # tick_context is crucial for contextualizing memories
         {:error, "Missing required parameter: :context (for tick_context)"}
+
       true ->
         MemoryBuilder.store_results(
           experience,

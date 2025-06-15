@@ -58,9 +58,10 @@ config :thunderline, Oban,
   repo: Thunderline.Repo,
   plugins: [
     Oban.Plugins.Pruner,
-    {Oban.Plugins.Cron, crontab: [
-      {"*/30 * * * *", Thunderline.Tick.TickWorker}
-    ]}
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"*/30 * * * *", Thunderline.Tick.TickWorker}
+     ]}
   ],
   queues: [
     tick: 10,
@@ -82,7 +83,8 @@ config :thunderline, :mcp,
 
 # PAC Configuration
 config :thunderline, :pac,
-  tick_interval: 30_000,  # 30 seconds
+  # 30 seconds
+  tick_interval: 30_000,
   default_zone_size: 100,
   max_agents_per_zone: 50
 

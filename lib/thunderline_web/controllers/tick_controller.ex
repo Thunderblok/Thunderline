@@ -11,7 +11,8 @@ defmodule ThunderlineWeb.TickController do
   end
 
   def start_simulation(conn, params) do
-    interval = params["interval"] || 30_000  # 30 seconds default
+    # 30 seconds default
+    interval = params["interval"] || 30_000
     max_concurrent = params["max_concurrent"] || 10
 
     case Orchestrator.start_simulation(interval: interval, max_concurrent: max_concurrent) do

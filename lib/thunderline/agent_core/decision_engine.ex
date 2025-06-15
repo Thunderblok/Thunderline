@@ -18,29 +18,35 @@ defmodule Thunderline.AgentCore.DecisionEngine do
   # end
 
   @type assessment :: map()
-  @type agent_config :: map() # Contains .stats, .personality etc.
+  # Contains .stats, .personality etc.
+  @type agent_config :: map()
   @type reasoning_mode :: :balanced | :survival | :growth | :social | :exploration
-  @type decision_struct :: map() # The rich map from evaluate_and_choose
+  # The rich map from evaluate_and_choose
+  @type decision_struct :: map()
   @type metadata :: map()
 
-  @spec make_decision(assessment(), agent_config(), reasoning_mode()) :: {:ok, {decision_struct(), metadata()}} | {:error, any()}
+  @spec make_decision(assessment(), agent_config(), reasoning_mode()) ::
+          {:ok, {decision_struct(), metadata()}} | {:error, any()}
   def make_decision(assessment, agent_config, reasoning_mode \\ :balanced) do
     with {:ok, options} <- generate_options(assessment, agent_config),
          {:ok, priorities} <- establish_priorities(assessment, agent_config, reasoning_mode),
          {:ok, decision} <- evaluate_and_choose(options, priorities, assessment, agent_config),
          {:ok, reasoning_text} <- generate_reasoning(decision, assessment, options) do
       final_decision = Map.put_if_absent(decision, :reasoning, reasoning_text)
+
       metadata = %{
         timestamp: DateTime.utc_now(),
-        options_considered: Enum.map(options, &(&1.action)),
+        options_considered: Enum.map(options, & &1.action),
         priorities: priorities,
         reasoning_mode: reasoning_mode
       }
+
       {:ok, {final_decision, metadata}}
     else
       {:error, reason} ->
         Logger.error("Decision engine failed: #{inspect(reason)}")
         {:error, reason}
+
       err ->
         Logger.error("Decision engine unexpected error: #{inspect(err)}")
         {:error, :unexpected_decision_engine_error}
@@ -54,9 +60,14 @@ defmodule Thunderline.AgentCore.DecisionEngine do
       %{action: "rest", type: :maintenance, energy_cost: -20, requirements: []},
       %{action: "reflect", type: :introspective, energy_cost: 5, requirements: []},
       %{action: "explore", type: :exploration, energy_cost: 15, requirements: ["curiosity"]},
-      %{action: "socialize", type: :social, energy_cost: 10, requirements: ["social_opportunity"]},
+      %{
+        action: "socialize",
+        type: :social,
+        energy_cost: 10,
+        requirements: ["social_opportunity"]
+      },
       %{action: "create", type: :creative, energy_cost: 20, requirements: ["creativity"]},
-      %{action: "learn", type: :intellectual, energy_cost: 15, requirements: ["intelligence"]},
+      %{action: "learn", type: :intellectual, energy_cost: 15, requirements: ["intelligence"]}
       # duplicate reflect removed, ensure it was intended or add back if necessary
     ]
 
@@ -86,7 +97,8 @@ defmodule Thunderline.AgentCore.DecisionEngine do
     adjusted_priorities =
       base_priorities
       |> adjust_for_mode(mode)
-      |> adjust_for_personality(agent_config.personality) # agent_config assumed to have .personality
+      # agent_config assumed to have .personality
+      |> adjust_for_personality(agent_config.personality)
       |> adjust_for_federation(Map.get(assessment, :federation_context, %{}))
 
     {:ok, adjusted_priorities}
@@ -96,14 +108,19 @@ defmodule Thunderline.AgentCore.DecisionEngine do
   defp evaluate_and_choose(options, priorities, assessment, agent_config) do
     decision_context = %{
       available_actions: Enum.map(options, & &1.action),
-      assessment: assessment, # Full assessment available to prompt
+      # Full assessment available to prompt
+      assessment: assessment,
       priorities: priorities,
       # agent_name, stats, traits, goals are often part of assessment.situation or assessment.needs
       # If not, ensure they are correctly passed or retrieved from agent_config if that's their source
-      agent_name: Map.get(agent_config, :name, "Unknown"), # Assuming name is in agent_config
-      stats: Map.get(agent_config, :stats, %{}), # Assuming stats in agent_config
-      traits: Map.get(agent_config, :traits, []), # Assuming traits in agent_config
-      goals: Map.get(assessment.needs, :goal_progress, []) # Goals are in assessment.needs
+      # Assuming name is in agent_config
+      agent_name: Map.get(agent_config, :name, "Unknown"),
+      # Assuming stats in agent_config
+      stats: Map.get(agent_config, :stats, %{}),
+      # Assuming traits in agent_config
+      traits: Map.get(agent_config, :traits, []),
+      # Goals are in assessment.needs
+      goals: Map.get(assessment.needs, :goal_progress, [])
     }
 
     prompt = PromptManager.generate_decision_prompt(decision_context)
@@ -113,15 +130,18 @@ defmodule Thunderline.AgentCore.DecisionEngine do
         decision = %{
           action: ai_decision["chosen_action"],
           confidence: ai_decision["confidence"] || 0.7,
-          alternatives: [ai_decision["backup_plan"]], # Ensure this is a list
+          # Ensure this is a list
+          alternatives: [ai_decision["backup_plan"]],
           reasoning: ai_decision["reasoning"],
           expected_outcome: ai_decision["expected_outcome"]
         }
+
         {:ok, decision}
 
       {:error, reason} ->
         Logger.warning("AI reasoning failed, using fallback: #{inspect(reason)}")
-        fallback_decision(options, priorities, assessment, agent_config) # Pass assessment and agent_config
+        # Pass assessment and agent_config
+        fallback_decision(options, priorities, assessment, agent_config)
     end
   end
 
@@ -130,7 +150,9 @@ defmodule Thunderline.AgentCore.DecisionEngine do
     # Context for score_option now includes assessment and agent_config for richer scoring if needed
     scored_options =
       options
-      |> Enum.map(&score_option(&1, priorities, %{assessment: assessment, agent_config: agent_config}))
+      |> Enum.map(
+        &score_option(&1, priorities, %{assessment: assessment, agent_config: agent_config})
+      )
       |> Enum.sort_by(& &1.total_score, :desc)
 
     case scored_options do
@@ -138,15 +160,19 @@ defmodule Thunderline.AgentCore.DecisionEngine do
         decision = %{
           action: best.action,
           confidence: 0.6,
-          alternatives: Enum.map(Enum.take(rest, 2), &(&1.action)), # ensure alternatives is a list of actions
-          reasoning: "Fallback decision based on priority scoring. Energy: #{assessment.situation.energy_level}, Mood: #{assessment.situation.mood_state}",
+          # ensure alternatives is a list of actions
+          alternatives: Enum.map(Enum.take(rest, 2), & &1.action),
+          reasoning:
+            "Fallback decision based on priority scoring. Energy: #{assessment.situation.energy_level}, Mood: #{assessment.situation.mood_state}",
           expected_outcome: "Expected positive outcome based on current priorities."
         }
+
         {:ok, decision}
 
       [] ->
         # If no options, default to a safe action like 'reflect' or 'idle'
         Logger.warning("No viable options in fallback, defaulting to :reflect")
+
         decision = %{
           action: "reflect",
           confidence: 0.5,
@@ -154,6 +180,7 @@ defmodule Thunderline.AgentCore.DecisionEngine do
           reasoning: "No viable options found in fallback, defaulting to reflect.",
           expected_outcome: "Gather more information or wait for conditions to change."
         }
+
         {:ok, decision}
     end
   end
@@ -161,20 +188,24 @@ defmodule Thunderline.AgentCore.DecisionEngine do
   defp generate_reasoning(decision, _assessment, _options) do
     # Reasoning is typically included in the decision from AI provider or fallback.
     # This function can augment it or provide a default if missing.
-    reasoning_text = Map.get(decision, :reasoning, "No specific reasoning provided by the core engine.")
+    reasoning_text =
+      Map.get(decision, :reasoning, "No specific reasoning provided by the core engine.")
+
     {:ok, reasoning_text}
   end
 
   # Filtering Functions
 
   defp filter_by_energy(options, energy_level) do
-    energy_threshold = case energy_level do
-      "high" -> 30
-      "medium" -> 20
-      "low" -> 10
-      "depleted" -> 0
-      _ -> 5 # Default for unknown energy levels
-    end
+    energy_threshold =
+      case energy_level do
+        "high" -> 30
+        "medium" -> 20
+        "low" -> 10
+        "depleted" -> 0
+        # Default for unknown energy levels
+        _ -> 5
+      end
 
     Enum.filter(options, fn option ->
       energy_cost = Map.get(option, :energy_cost, 0)
@@ -218,58 +249,74 @@ defmodule Thunderline.AgentCore.DecisionEngine do
   end
 
   defp add_tool_based_options(options, applicable_tools) when is_list(applicable_tools) do
-    tool_options = Enum.map(applicable_tools, fn tool ->
-      %{
-        action: "use_#{tool}",
-        type: :tool_usage,
-        energy_cost: 12, # Example cost, could be tool-specific
-        requirements: [tool], # Could include skill requirements
-        tool: tool
-      }
-    end)
+    tool_options =
+      Enum.map(applicable_tools, fn tool ->
+        %{
+          action: "use_#{tool}",
+          type: :tool_usage,
+          # Example cost, could be tool-specific
+          energy_cost: 12,
+          # Could include skill requirements
+          requirements: [tool],
+          tool: tool
+        }
+      end)
 
     options ++ tool_options
   end
+
   defp add_tool_based_options(options, _), do: options
 
-
   defp add_goal_based_options(options, goal_progress) when is_list(goal_progress) do
-    goal_options = goal_progress
-    |> Enum.filter(fn goal -> (goal["progress"] || 0) < 100 end)
-    |> Enum.map(fn goal ->
-      %{
-        action: "work_on_goal_#{goal["goal"] || "unnamed"}", # More specific action name
-        type: :goal_pursuit,
-        energy_cost: 18, # Example cost
-        requirements: [], # Could include resource or state requirements
-        goal_id: goal["goal_id"] || goal["goal"], # Reference to the goal
-        goal_description: goal["description"] || goal["goal"]
-      }
-    end)
+    goal_options =
+      goal_progress
+      |> Enum.filter(fn goal -> (goal["progress"] || 0) < 100 end)
+      |> Enum.map(fn goal ->
+        %{
+          # More specific action name
+          action: "work_on_goal_#{goal["goal"] || "unnamed"}",
+          type: :goal_pursuit,
+          # Example cost
+          energy_cost: 18,
+          # Could include resource or state requirements
+          requirements: [],
+          # Reference to the goal
+          goal_id: goal["goal_id"] || goal["goal"],
+          goal_description: goal["description"] || goal["goal"]
+        }
+      end)
 
     options ++ goal_options
   end
+
   defp add_goal_based_options(options, _), do: options
 
-
   defp add_federation_options(options, federation_context) when is_map(federation_context) do
-    federation_options = case Map.get(federation_context, :coordination_requests, []) do
-      [] -> []
-      requests when is_list(requests) ->
-        Enum.map(requests, fn request ->
-          %{
-            action: "coordinate_#{request.type}",
-            type: :federation,
-            energy_cost: 15,
-            requirements: ["federation_ready"], # Example requirement
-            federation_task: request
-          }
-        end)
-      _ -> [] # Handle malformed requests
-    end
+    federation_options =
+      case Map.get(federation_context, :coordination_requests, []) do
+        [] ->
+          []
+
+        requests when is_list(requests) ->
+          Enum.map(requests, fn request ->
+            %{
+              action: "coordinate_#{request.type}",
+              type: :federation,
+              energy_cost: 15,
+              # Example requirement
+              requirements: ["federation_ready"],
+              federation_task: request
+            }
+          end)
+
+        # Handle malformed requests
+        _ ->
+          []
+      end
 
     options ++ federation_options
   end
+
   defp add_federation_options(options, _), do: options
 
   # Priority Calculation
@@ -284,7 +331,8 @@ defmodule Thunderline.AgentCore.DecisionEngine do
       "low" -> base + 0.4
       "medium" -> base + 0.1
       "high" -> base
-      _ -> base # Default for unknown
+      # Default for unknown
+      _ -> base
     end
   end
 
@@ -305,28 +353,36 @@ defmodule Thunderline.AgentCore.DecisionEngine do
     social_needs = Map.get(needs, :social_needs, %{})
     social_context = Map.get(situation, :social_context, %{})
 
-    social_bonus = case Map.get(social_needs, :interaction_preference, "neutral") do
-      "seeks" -> 0.4
-      "neutral" -> 0.1
-      _ -> 0.0
-    end
+    social_bonus =
+      case Map.get(social_needs, :interaction_preference, "neutral") do
+        "seeks" -> 0.4
+        "neutral" -> 0.1
+        _ -> 0.0
+      end
 
     presence_bonus = if Map.get(social_context, :other_agents_present, 0) > 0, do: 0.2, else: 0.0
 
     base + social_bonus + presence_bonus
   end
 
-  defp calculate_achievement_priority(goal_progress) when is_list(goal_progress) and goal_progress != [] do
+  defp calculate_achievement_priority(goal_progress)
+       when is_list(goal_progress) and goal_progress != [] do
     valid_goals = Enum.filter(goal_progress, &is_map/1)
+
     if Enum.empty?(valid_goals) do
       0.1
     else
-      avg_progress = Enum.map(valid_goals, &Map.get(&1, :progress, 0)) |> Enum.sum() |> div(length(valid_goals))
-      0.3 + (100 - avg_progress) / 200  # Higher priority for less complete goals
+      avg_progress =
+        Enum.map(valid_goals, &Map.get(&1, :progress, 0))
+        |> Enum.sum()
+        |> div(length(valid_goals))
+
+      # Higher priority for less complete goals
+      0.3 + (100 - avg_progress) / 200
     end
   end
-  defp calculate_achievement_priority(_), do: 0.1
 
+  defp calculate_achievement_priority(_), do: 0.1
 
   defp calculate_exploration_priority(agent_config, situation) do
     base = 0.3
@@ -343,55 +399,82 @@ defmodule Thunderline.AgentCore.DecisionEngine do
 
   defp adjust_for_mode(priorities, mode) do
     case mode do
-      :survival -> Map.update(priorities, :survival, priorities.survival || 0, &(&1 * 1.5))
-      :growth -> Map.update(priorities, :growth, priorities.growth || 0, &(&1 * 1.4))
-      :social -> Map.update(priorities, :social, priorities.social || 0, &(&1 * 1.3))
-      :exploration -> Map.update(priorities, :exploration, priorities.exploration || 0, &(&1 * 1.3))
-      :balanced -> priorities
-      _ -> priorities # Unknown mode
+      :survival ->
+        Map.update(priorities, :survival, priorities.survival || 0, &(&1 * 1.5))
+
+      :growth ->
+        Map.update(priorities, :growth, priorities.growth || 0, &(&1 * 1.4))
+
+      :social ->
+        Map.update(priorities, :social, priorities.social || 0, &(&1 * 1.3))
+
+      :exploration ->
+        Map.update(priorities, :exploration, priorities.exploration || 0, &(&1 * 1.3))
+
+      :balanced ->
+        priorities
+
+      # Unknown mode
+      _ ->
+        priorities
     end
   end
 
   defp adjust_for_personality(priorities, personality) when is_map(personality) do
     # Ensure personality is a map
     case Map.get(personality, :decision_tendency) do
-      "exploratory" -> Map.update(priorities, :exploration, priorities.exploration || 0, &(&1 * 1.2))
-      "analytical" -> Map.update(priorities, :growth, priorities.growth || 0, &(&1 * 1.2))
-      "social" -> Map.update(priorities, :social, priorities.social || 0, &(&1 * 1.2))
-      _ -> priorities
+      "exploratory" ->
+        Map.update(priorities, :exploration, priorities.exploration || 0, &(&1 * 1.2))
+
+      "analytical" ->
+        Map.update(priorities, :growth, priorities.growth || 0, &(&1 * 1.2))
+
+      "social" ->
+        Map.update(priorities, :social, priorities.social || 0, &(&1 * 1.2))
+
+      _ ->
+        priorities
     end
   end
-  defp adjust_for_personality(priorities, _), do: priorities # Non-map personality
 
+  # Non-map personality
+  defp adjust_for_personality(priorities, _), do: priorities
 
   defp adjust_for_federation(priorities, federation_context) when is_map(federation_context) do
     # Adjust priorities based on federation needs
     case Map.get(federation_context, :coordination_priority, :normal) do
-      :high -> Map.put(priorities, :federation, 0.8) # Consider if :federation key always exists or needs default
+      # Consider if :federation key always exists or needs default
+      :high -> Map.put(priorities, :federation, 0.8)
       :medium -> Map.put(priorities, :federation, 0.4)
       :low -> Map.put(priorities, :federation, 0.1)
-      _ -> priorities # Includes :normal or unknown
+      # Includes :normal or unknown
+      _ -> priorities
     end
   end
-  defp adjust_for_federation(priorities, _), do: priorities # Non-map context
+
+  # Non-map context
+  defp adjust_for_federation(priorities, _), do: priorities
 
   # Option Scoring
 
   defp score_option(option, priorities, context) when is_map(option) and is_map(priorities) do
-    base_score = 50.0 # Use float for scores
+    # Use float for scores
+    base_score = 50.0
 
     # Score based on action type alignment with priorities
-    type_score = case option.type do
-      :maintenance -> (priorities.survival || 0.0) * 100.0
-      :social -> (priorities.social || 0.0) * 100.0
-      :creative -> (priorities.growth || 0.0) * 80.0
-      :intellectual -> (priorities.growth || 0.0) * 90.0
-      :exploration -> (priorities.exploration || 0.0) * 100.0
-      :goal_pursuit -> (priorities.achievement || 0.0) * 100.0
-      :federation -> (Map.get(priorities, :federation, 0.0)) * 100.0
-      :tool_usage -> (Map.get(priorities, :utility, 0.3)) * 70.0 # Add a generic utility score for tools
-      _ -> 30.0
-    end
+    type_score =
+      case option.type do
+        :maintenance -> (priorities.survival || 0.0) * 100.0
+        :social -> (priorities.social || 0.0) * 100.0
+        :creative -> (priorities.growth || 0.0) * 80.0
+        :intellectual -> (priorities.growth || 0.0) * 90.0
+        :exploration -> (priorities.exploration || 0.0) * 100.0
+        :goal_pursuit -> (priorities.achievement || 0.0) * 100.0
+        :federation -> Map.get(priorities, :federation, 0.0) * 100.0
+        # Add a generic utility score for tools
+        :tool_usage -> Map.get(priorities, :utility, 0.3) * 70.0
+        _ -> 30.0
+      end
 
     # Apply energy cost penalty
     energy_penalty = (Map.get(option, :energy_cost, 0) || 0) * 0.5
@@ -403,5 +486,7 @@ defmodule Thunderline.AgentCore.DecisionEngine do
 
     Map.put(option, :total_score, total_score)
   end
-  defp score_option(option, _, _), do: option # Return option as is if inputs are not as expected
+
+  # Return option as is if inputs are not as expected
+  defp score_option(option, _, _), do: option
 end

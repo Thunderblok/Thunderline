@@ -19,7 +19,8 @@ defmodule Thunderline.OKO.GridWorld do
   alias Graphmath.Vec3
   alias Graphmath.Mat44
 
-  @derive {Jason.Encoder, only: [:id, :pac_id, :lat, :lng, :x, :y, :z, :region_id, :tick_id, :timestamp]}
+  @derive {Jason.Encoder,
+           only: [:id, :pac_id, :lat, :lng, :x, :y, :z, :region_id, :tick_id, :timestamp]}
 
   postgres do
     table "oko_grid_positions"
@@ -102,7 +103,20 @@ defmodule Thunderline.OKO.GridWorld do
 
     create :place_pac do
       description "Place PAC at specific coordinates"
-      accept [:pac_id, :lat, :lng, :x, :y, :z, :region_id, :tick_id, :heading, :velocity, :elevation_meters]
+
+      accept [
+        :pac_id,
+        :lat,
+        :lng,
+        :x,
+        :y,
+        :z,
+        :region_id,
+        :tick_id,
+        :heading,
+        :velocity,
+        :elevation_meters
+      ]
     end
 
     read :get_pac_position do
@@ -144,18 +158,22 @@ defmodule Thunderline.OKO.GridWorld do
   def gps_to_grid(lat, lng, base_lat \\ 0.0, base_lng \\ 0.0) do
     # Convert GPS coordinates to 3D grid positions
     # Each degree ≈ 111km, scale to reasonable grid units
-    x = (lng - base_lng) * 111_000  # meters from base longitude
-    y = (lat - base_lat) * 111_000  # meters from base latitude
-    z = 0.0  # Ground level by default
+    # meters from base longitude
+    x = (lng - base_lng) * 111_000
+    # meters from base latitude
+    y = (lat - base_lat) * 111_000
+    # Ground level by default
+    z = 0.0
 
     {x, y, z}
   end
 
   def grid_to_gps(x, y, z \\ 0.0, base_lat \\ 0.0, base_lng \\ 0.0) do
     # Convert 3D grid positions back to GPS coordinates
-    lat = base_lat + (y / 111_000)
-    lng = base_lng + (x / 111_000)
-    elevation = z  # Z becomes elevation in meters
+    lat = base_lat + y / 111_000
+    lng = base_lng + x / 111_000
+    # Z becomes elevation in meters
+    elevation = z
 
     {lat, lng, elevation}
   end
@@ -165,13 +183,15 @@ defmodule Thunderline.OKO.GridWorld do
     dlat = :math.pi() * (lat2 - lat1) / 180
     dlng = :math.pi() * (lng2 - lng1) / 180
 
-    a = :math.sin(dlat / 2) * :math.sin(dlat / 2) +
+    a =
+      :math.sin(dlat / 2) * :math.sin(dlat / 2) +
         :math.cos(:math.pi() * lat1 / 180) * :math.cos(:math.pi() * lat2 / 180) *
-        :math.sin(dlng / 2) * :math.sin(dlng / 2)
+          :math.sin(dlng / 2) * :math.sin(dlng / 2)
 
     c = 2 * :math.atan2(:math.sqrt(a), :math.sqrt(1 - a))
 
-    6371 * c  # Earth radius in km
+    # Earth radius in km
+    6371 * c
   end
 
   ## Enhanced 3D Operations with Graphmath

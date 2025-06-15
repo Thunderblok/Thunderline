@@ -13,20 +13,25 @@ defmodule Thunderline.Agents.Actions.ExecuteAction do
     # Extract parameters based on original schema
     decision = params[:decision]
     pac_config = params[:pac_config]
-    context = params[:context] # This contains zone_context etc.
-    available_tools = params[:available_tools] || [] # Default from original schema
+    # This contains zone_context etc.
+    context = params[:context]
+    # Default from original schema
+    available_tools = params[:available_tools] || []
 
     # Ensure required parameters are present
     cond do
       is_nil(decision) ->
         {:error, "Missing required parameter: :decision"}
+
       is_nil(pac_config) ->
         {:error, "Missing required parameter: :pac_config"}
+
       is_nil(context) ->
         # Context is essential for check_prerequisites, even if it's an empty map.
         # Depending on strictness, could default to %{} or error out.
         # For now, let's require it as per schema.
         {:error, "Missing required parameter: :context"}
+
       true ->
         ActionExecutor.run(
           decision,

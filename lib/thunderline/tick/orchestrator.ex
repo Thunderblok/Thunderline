@@ -98,7 +98,9 @@ defmodule Thunderline.Tick.Orchestrator do
       {:ok, active_agents} ->
         active_agent_ids = MapSet.new(active_agents, & &1.id)
 
-        Logger.info("Loaded #{MapSet.size(active_agent_ids)} active agents for tick orchestration")
+        Logger.info(
+          "Loaded #{MapSet.size(active_agent_ids)} active agents for tick orchestration"
+        )
 
         # Schedule ticks for all active agents
         Enum.each(active_agent_ids, fn agent_id ->
@@ -172,9 +174,7 @@ defmodule Thunderline.Tick.Orchestrator do
     # Cancel all scheduled ticks
     Enum.each(state.active_agents, &cancel_agent_tick/1)
 
-    new_state = %{state |
-      system_health: Map.put(state.system_health, :status, :paused)
-    }
+    new_state = %{state | system_health: Map.put(state.system_health, :status, :paused)}
 
     Logger.info("All ticks paused")
     {:reply, :ok, new_state}
@@ -187,9 +187,7 @@ defmodule Thunderline.Tick.Orchestrator do
       schedule_agent_tick(agent_id, state.config.tick_interval)
     end)
 
-    new_state = %{state |
-      system_health: Map.put(state.system_health, :status, :healthy)
-    }
+    new_state = %{state | system_health: Map.put(state.system_health, :status, :healthy)}
 
     Logger.info("All ticks resumed")
     {:reply, :ok, new_state}
@@ -214,11 +212,13 @@ defmodule Thunderline.Tick.Orchestrator do
     # Perform system health check
     health_status = perform_health_check(state)
 
-    new_state = %{state |
-      system_health: Map.merge(state.system_health, %{
-        status: health_status,
-        last_check: DateTime.utc_now()
-      })
+    new_state = %{
+      state
+      | system_health:
+          Map.merge(state.system_health, %{
+            status: health_status,
+            last_check: DateTime.utc_now()
+          })
     }
 
     # Schedule next health check
@@ -310,9 +310,14 @@ defmodule Thunderline.Tick.Orchestrator do
   defp perform_health_check(state) do
     # Check system resources, database connectivity, etc.
     cond do
-      MapSet.size(state.active_agents) > 1000 -> :overloaded
-      state.performance_metrics.failed_ticks / max(state.performance_metrics.total_ticks, 1) > 0.1 -> :degraded
-      true -> :healthy
+      MapSet.size(state.active_agents) > 1000 ->
+        :overloaded
+
+      state.performance_metrics.failed_ticks / max(state.performance_metrics.total_ticks, 1) > 0.1 ->
+        :degraded
+
+      true ->
+        :healthy
     end
   end
 
@@ -323,17 +328,15 @@ defmodule Thunderline.Tick.Orchestrator do
   end
 
   defp update_tick_metrics(metrics, _agent_id, _result) do
-    %{metrics |
-      total_ticks: metrics.total_ticks + 1,
-      successful_ticks: metrics.successful_ticks + 1
+    %{
+      metrics
+      | total_ticks: metrics.total_ticks + 1,
+        successful_ticks: metrics.successful_ticks + 1
     }
   end
 
   defp update_error_metrics(metrics, _agent_id, _reason) do
-    %{metrics |
-      total_ticks: metrics.total_ticks + 1,
-      failed_ticks: metrics.failed_ticks + 1
-    }
+    %{metrics | total_ticks: metrics.total_ticks + 1, failed_ticks: metrics.failed_ticks + 1}
   end
 
   defp calculate_backoff_interval(_agent_id, base_interval) do

@@ -18,6 +18,7 @@ defmodule Thunderline.PAC.Mod do
   import Ash.Resource.Change
 
   alias Thunderline.PAC.Agent
+
   postgres do
     table "pac_mods"
     repo Thunderline.Repo
@@ -57,15 +58,16 @@ defmodule Thunderline.PAC.Mod do
     # Type of modification
     attribute :mod_type, :atom do
       allow_nil? false
+
       constraints one_of: [
-        :behavior,
-        :capability,
-        :memory,
-        :tool,
-        :personality,
-        :stat_boost,
-        :skill
-      ]
+                    :behavior,
+                    :capability,
+                    :memory,
+                    :tool,
+                    :personality,
+                    :stat_boost,
+                    :skill
+                  ]
     end
 
     # Configuration and parameters
@@ -108,11 +110,21 @@ defmodule Thunderline.PAC.Mod do
       allow_nil? false
     end
   end
+
   actions do
     defaults [:read, :destroy]
 
     create :create do
-      accept [:name, :description, :mod_type, :pac_agent_id, :config, :effects, :duration, :permanent]
+      accept [
+        :name,
+        :description,
+        :mod_type,
+        :pac_agent_id,
+        :config,
+        :effects,
+        :duration,
+        :permanent
+      ]
 
       change fn changeset, _context ->
         Ash.Changeset.change_attribute(changeset, :applied_at, DateTime.utc_now())
@@ -125,6 +137,7 @@ defmodule Thunderline.PAC.Mod do
 
     update :apply_to_agent do
       accept []
+
       change fn changeset, _context ->
         # This will be called when applying the mod's effects to an agent
         # Implementation would depend on the specific mod type and effects
@@ -134,6 +147,7 @@ defmodule Thunderline.PAC.Mod do
 
     update :deactivate do
       accept []
+
       change fn changeset, _ ->
         Ash.Changeset.change_attribute(changeset, :active, false)
       end
@@ -141,6 +155,7 @@ defmodule Thunderline.PAC.Mod do
 
     update :activate do
       accept []
+
       change fn changeset, _ ->
         Ash.Changeset.change_attribute(changeset, :active, true)
       end
@@ -162,9 +177,9 @@ defmodule Thunderline.PAC.Mod do
 
     read :expired do
       filter expr(
-        not is_nil(duration) and
-        fragment("? + INTERVAL '1 second' * ? < NOW()", applied_at, duration)
-      )
+               not is_nil(duration) and
+                 fragment("? + INTERVAL '1 second' * ? < NOW()", applied_at, duration)
+             )
     end
   end
 
@@ -175,12 +190,15 @@ defmodule Thunderline.PAC.Mod do
 
         records
         |> Enum.map(fn record ->
-          expired = case record.duration do
-            nil -> false
-            duration ->
-              expiry_time = DateTime.add(record.applied_at, duration, :second)
-              DateTime.compare(now, expiry_time) == :gt
-          end
+          expired =
+            case record.duration do
+              nil ->
+                false
+
+              duration ->
+                expiry_time = DateTime.add(record.applied_at, duration, :second)
+                DateTime.compare(now, expiry_time) == :gt
+            end
 
           {record, expired}
         end)
@@ -194,12 +212,15 @@ defmodule Thunderline.PAC.Mod do
 
         records
         |> Enum.map(fn record ->
-          remaining = case record.duration do
-            nil -> nil
-            duration ->
-              expiry_time = DateTime.add(record.applied_at, duration, :second)
-              max(0, DateTime.diff(expiry_time, now, :second))
-          end
+          remaining =
+            case record.duration do
+              nil ->
+                nil
+
+              duration ->
+                expiry_time = DateTime.add(record.applied_at, duration, :second)
+                max(0, DateTime.diff(expiry_time, now, :second))
+            end
 
           {record, remaining}
         end)
@@ -213,6 +234,7 @@ defmodule Thunderline.PAC.Mod do
       where present(:duration)
     end
   end
+
   code_interface do
     domain Thunderline.Domain
 

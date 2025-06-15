@@ -12,14 +12,17 @@ defmodule Thunderline.Agents.Actions.MakeDecision do
   def run(params, _ctx) do
     assessment = params[:assessment]
     agent_config = params[:agent_config]
-    reasoning_mode = params[:reasoning_mode] || :balanced # Default from original schema
+    # Default from original schema
+    reasoning_mode = params[:reasoning_mode] || :balanced
 
     # Ensure required parameters are present
     cond do
       is_nil(assessment) ->
         {:error, "Missing required parameter: :assessment"}
+
       is_nil(agent_config) ->
         {:error, "Missing required parameter: :agent_config"}
+
       true ->
         DecisionEngine.make_decision(
           assessment,

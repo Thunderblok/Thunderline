@@ -11,6 +11,7 @@ defmodule Thunderline.Supervisor do
   def start_link(init_arg) do
     Supervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
   end
+
   @impl true
   def init(_init_arg) do
     children = [
@@ -29,11 +30,18 @@ defmodule Thunderline.Supervisor do
       # Tick orchestrator
       Thunderline.Tick.Orchestrator,
 
-      # Zone orchestrator (global zone tock updates)
+      # Broadway pipelines for concurrent event processing
+      {Thunderline.Tick.Broadway, []},
+      {Thunderline.Zone.EventBroadway, []},
+
+      # Zone orchestrator (global zone tick updates)
       Thunderline.World.ZoneOrchestrator,
 
       # Narrative engine
-      Thunderline.Narrative.Engine
+      Thunderline.Narrative.Engine,
+
+      # Presence tracking
+      ThunderlineWeb.Presence
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

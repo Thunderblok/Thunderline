@@ -21,6 +21,7 @@ defmodule ThunderlineWeb.FallbackController do
     |> put_view(html: ThunderlineWeb.ErrorHTML, json: ThunderlineWeb.ErrorJSON)
     |> render(:"404")
   end
+
   # Handle Ash errors
   def call(conn, {:error, error}) when is_exception(error) do
     conn

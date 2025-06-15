@@ -117,15 +117,16 @@ defmodule Thunderline.Memory.Manager do
       {:ok, query_embedding} ->
         # Find similar memories
         case MemoryNode.find_similar(
-          query_embedding,
-          limit,
-          Decimal.new(to_string(threshold))
-        ) do
+               query_embedding,
+               limit,
+               Decimal.new(to_string(threshold))
+             ) do
           {:ok, similar_nodes} ->
             # Filter by agent and add similarity scores
-            agent_memories = Enum.filter(similar_nodes, fn node ->
-              node.agent_id == agent_id
-            end)
+            agent_memories =
+              Enum.filter(similar_nodes, fn node ->
+                node.agent_id == agent_id
+              end)
 
             # Mark as accessed
             Enum.each(agent_memories, fn node ->
@@ -150,11 +151,12 @@ defmodule Thunderline.Memory.Manager do
     case MemoryNode.list_by_agent(agent_id, load: [:outgoing_edges, :incoming_edges]) do
       {:ok, nodes} ->
         # Build graph with connections
-        edges = nodes
-        |> Enum.flat_map(fn node ->
-          (node.outgoing_edges || []) ++ (node.incoming_edges || [])
-        end)
-        |> Enum.uniq_by(& &1.id)
+        edges =
+          nodes
+          |> Enum.flat_map(fn node ->
+            (node.outgoing_edges || []) ++ (node.incoming_edges || [])
+          end)
+          |> Enum.uniq_by(& &1.id)
 
         graph = %{
           nodes: nodes,
@@ -192,11 +194,12 @@ defmodule Thunderline.Memory.Manager do
         merge_results = merge_duplicate_memories(duplicates)
         prune_results = prune_low_importance_memories(low_importance)
 
-        {:ok, %{
-          duplicates_merged: length(merge_results),
-          memories_pruned: length(prune_results),
-          total_memories: length(memories) - length(prune_results)
-        }}
+        {:ok,
+         %{
+           duplicates_merged: length(merge_results),
+           memories_pruned: length(prune_results),
+           total_memories: length(memories) - length(prune_results)
+         }}
 
       {:error, reason} ->
         {:error, reason}
@@ -213,6 +216,7 @@ defmodule Thunderline.Memory.Manager do
   defp generate_summary(content) do
     # Simple summary generation - could use AI
     words = String.split(content)
+
     if length(words) > 20 do
       words |> Enum.take(20) |> Enum.join(" ") |> Kernel.<>("...")
     else
@@ -226,13 +230,15 @@ defmodule Thunderline.Memory.Manager do
 
     case MemoryNode.list_by_agent(agent_id) do
       {:ok, memories} ->
-        matching_memories = Enum.filter(memories, fn memory ->
-          memory_text = String.downcase(memory.content)
-          Enum.any?(query_words, fn word ->
-            String.contains?(memory_text, word)
+        matching_memories =
+          Enum.filter(memories, fn memory ->
+            memory_text = String.downcase(memory.content)
+
+            Enum.any?(query_words, fn word ->
+              String.contains?(memory_text, word)
+            end)
           end)
-        end)
-        |> Enum.take(limit)
+          |> Enum.take(limit)
 
         {:ok, matching_memories}
 
@@ -251,7 +257,7 @@ defmodule Thunderline.Memory.Manager do
     # Find memories with low importance and low access count
     Enum.filter(memories, fn memory ->
       Decimal.lt?(memory.importance, Decimal.new("0.2")) and
-      memory.access_count < 2
+        memory.access_count < 2
     end)
   end
 

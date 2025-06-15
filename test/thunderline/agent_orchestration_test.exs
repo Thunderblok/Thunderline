@@ -10,7 +10,8 @@ defmodule Thunderline.AgentOrchestrationTest do
   # Application.put_env(:thunderline, Thunderline.Memory.Manager, Thunderline.Memory.ManagerMock)
   # Application.put_env(:thunderline, Thunderline.Memory.VectorSearch, Thunderline.Memory.VectorSearchMock)
 
-  import Mox # Import Mox for expect/verify calls
+  # Import Mox for expect/verify calls
+  import Mox
 
   alias Thunderline.AgentCore.ContextAssessor
   alias Thunderline.AgentCore.DecisionEngine
@@ -18,10 +19,12 @@ defmodule Thunderline.AgentOrchestrationTest do
   alias Thunderline.AgentCore.MemoryBuilder
 
   # These would be the Mock modules if defined via Mox.defmock/2
-  alias Thunderline.PAC.Manager, as: PACManager # Actual module for type hints, Mox will intercept calls
-  alias Thunderline.Memory.Manager, as: MemoryManager # Actual module
-  alias Thunderline.Memory.VectorSearch, as: VectorSearch # Actual module
-
+  # Actual module for type hints, Mox will intercept calls
+  alias Thunderline.PAC.Manager, as: PACManager
+  # Actual module
+  alias Thunderline.Memory.Manager, as: MemoryManager
+  # Actual module
+  alias Thunderline.Memory.VectorSearch, as: VectorSearch
 
   describe "Agent Tick Orchestration" do
     test "simulates a basic agent tick processing flow" do
@@ -31,6 +34,7 @@ defmodule Thunderline.AgentOrchestrationTest do
 
       # Prepare Initial Data
       pac_id = Ecto.UUID.generate()
+
       pac_config = %{
         "pac_id" => pac_id,
         "pac_name" => "TestAgent",
@@ -42,13 +46,16 @@ defmodule Thunderline.AgentOrchestrationTest do
           "intelligence" => 50,
           "curiosity" => 50
         },
-        "state" => %{ # Added state map as it's used by ContextAssessor and updated by ActionExecutor
+        # Added state map as it's used by ContextAssessor and updated by ActionExecutor
+        "state" => %{
           "activity" => "idle",
-          "mood" => "neutral", # Consistent with stats
+          # Consistent with stats
+          "mood" => "neutral",
           "goals" => []
         },
         "traits" => ["calm", "analytical"],
-        "personality" => %{ # Added personality as it's used by DecisionEngine & MemoryBuilder
+        # Added personality as it's used by DecisionEngine & MemoryBuilder
+        "personality" => %{
           "decision_tendency" => "balanced"
         }
       }
@@ -61,22 +68,30 @@ defmodule Thunderline.AgentOrchestrationTest do
         "atmosphere" => "calm"
       }
 
-      memories = [] # For ContextAssessor
-      tools_for_assessor = ["observation", "communication"] # For ContextAssessor.run/6 'tools' param
+      # For ContextAssessor
+      memories = []
+      # For ContextAssessor.run/6 'tools' param
+      tools_for_assessor = ["observation", "communication"]
       tick_count = 10
       federation_context = %{}
-      previous_state_for_memory = %{"mood" => "neutral", "activity" => "idle"} # For MemoryBuilder
-      available_tools_for_executor = ["observation", "communication", "reflect_tool"] # For ActionExecutor.run/4
+      # For MemoryBuilder
+      previous_state_for_memory = %{"mood" => "neutral", "activity" => "idle"}
+      # For ActionExecutor.run/4
+      available_tools_for_executor = ["observation", "communication", "reflect_tool"]
 
       # 1. Context Assessment
-      {:ok, {assessment_result, _assessment_meta}} = ContextAssessor.run(
-        pac_config,       # agent param in ContextAssessor
-        zone_context,
-        memories,
-        tools_for_assessor,  # tools param in ContextAssessor
-        tick_count,
-        federation_context
-      )
+      {:ok, {assessment_result, _assessment_meta}} =
+        ContextAssessor.run(
+          # agent param in ContextAssessor
+          pac_config,
+          zone_context,
+          memories,
+          # tools param in ContextAssessor
+          tools_for_assessor,
+          tick_count,
+          federation_context
+        )
+
       assert is_map(assessment_result)
       assert Map.has_key?(assessment_result, :situation)
       assert Map.has_key?(assessment_result, :needs)
@@ -85,10 +100,13 @@ defmodule Thunderline.AgentOrchestrationTest do
       # The DecisionEngine's refactored make_decision/3 is quite complex.
       # For a basic test, we might get a variety of actions.
       # We'll assert a decision is made.
-      {:ok, {decision, _decision_meta}} = DecisionEngine.make_decision(assessment_result, pac_config, :balanced)
+      {:ok, {decision, _decision_meta}} =
+        DecisionEngine.make_decision(assessment_result, pac_config, :balanced)
+
       assert is_map(decision)
       assert decision.action != nil
-      IO.inspect(decision, label: "Made Decision") # Useful for debugging
+      # Useful for debugging
+      IO.inspect(decision, label: "Made Decision")
 
       # 3. Action Execution
       # Mocking Thunderline.PAC.Manager.update_pac_state/2
@@ -110,12 +128,15 @@ defmodule Thunderline.AgentOrchestrationTest do
       # No ToolRouter mock needed.
 
       # The 'context' for ActionExecutor is the assessment_result.
-      {:ok, {updated_pac_config, execution_outcome, _exec_meta}} = ActionExecutor.run(
-        decision,
-        pac_config,
-        assessment_result, # This is the 'context' for check_prerequisites
-        available_tools_for_executor
-      )
+      {:ok, {updated_pac_config, execution_outcome, _exec_meta}} =
+        ActionExecutor.run(
+          decision,
+          pac_config,
+          # This is the 'context' for check_prerequisites
+          assessment_result,
+          available_tools_for_executor
+        )
+
       assert is_map(updated_pac_config)
       assert is_map(execution_outcome)
       assert updated_pac_config["pac_id"] == pac_id
@@ -147,12 +168,15 @@ defmodule Thunderline.AgentOrchestrationTest do
 
       # The 'experience' for MemoryBuilder is the execution_outcome.
       # The 'tick_context' for MemoryBuilder is the assessment_result.
-      {:ok, memory_report} = MemoryBuilder.store_results(
-        execution_outcome,
-        updated_pac_config,
-        assessment_result, # This is the tick_context for memory formation
-        previous_state_for_memory
-      )
+      {:ok, memory_report} =
+        MemoryBuilder.store_results(
+          execution_outcome,
+          updated_pac_config,
+          # This is the tick_context for memory formation
+          assessment_result,
+          previous_state_for_memory
+        )
+
       assert is_map(memory_report)
       assert Map.has_key?(memory_report, :memories_formed_count)
       # IO.inspect(memory_report, label: "Memory Report")

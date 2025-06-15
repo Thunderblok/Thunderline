@@ -25,7 +25,8 @@ defmodule ThunderlineWeb.MapLive do
      socket
      |> assign(:pacs, [])
      |> assign(:current_region, "sector_alpha")
-     |> assign(:map_center, %{lat: 40.7128, lng: -74.0060})  # NYC default
+     # NYC default
+     |> assign(:map_center, %{lat: 40.7128, lng: -74.0060})
      |> assign(:zoom_level, 12)}
   end
 
@@ -57,19 +58,18 @@ defmodule ThunderlineWeb.MapLive do
 
     # Create new PAC position
     case Domain.create(GridWorld, %{
-      pac_id: pac_id,
-      lat: lat,
-      lng: lng,
-      x: x,
-      y: y,
-      z: z,
-      region_id: socket.assigns.current_region,
-      tick_id: tick_id
-    }) do
+           pac_id: pac_id,
+           lat: lat,
+           lng: lng,
+           x: x,
+           y: y,
+           z: z,
+           region_id: socket.assigns.current_region,
+           tick_id: tick_id
+         }) do
       {:ok, position} ->
         # Broadcast to other viewers
-        Phoenix.PubSub.broadcast(Thunderline.PubSub, "pac_movements",
-          {:pac_placed, position})
+        Phoenix.PubSub.broadcast(Thunderline.PubSub, "pac_movements", {:pac_placed, position})
 
         {:noreply,
          socket
@@ -91,17 +91,20 @@ defmodule ThunderlineWeb.MapLive do
     case Domain.read!(GridWorld, action: :get_pac_position, pac_id: pac_id) do
       [position | _] ->
         case Domain.update(position, %{
-          lat: lat,
-          lng: lng,
-          x: x,
-          y: y,
-          z: z,
-          tick_id: tick_id
-        }) do
+               lat: lat,
+               lng: lng,
+               x: x,
+               y: y,
+               z: z,
+               tick_id: tick_id
+             }) do
           {:ok, updated_position} ->
             # Broadcast movement
-            Phoenix.PubSub.broadcast(Thunderline.PubSub, "pac_movements",
-              {:pac_moved, updated_position})
+            Phoenix.PubSub.broadcast(
+              Thunderline.PubSub,
+              "pac_movements",
+              {:pac_moved, updated_position}
+            )
 
             {:noreply,
              socket
@@ -123,8 +126,7 @@ defmodule ThunderlineWeb.MapLive do
       [position | _] ->
         Domain.destroy(position)
 
-        Phoenix.PubSub.broadcast(Thunderline.PubSub, "pac_movements",
-          {:pac_removed, pac_id})
+        Phoenix.PubSub.broadcast(Thunderline.PubSub, "pac_movements", {:pac_removed, pac_id})
 
         {:noreply,
          socket

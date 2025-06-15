@@ -5,12 +5,16 @@ defmodule Thunderline.AgentCore.ActionExecutor do
   """
 
   require Logger
-  alias Thunderline.MCP.{ToolRouter, ToolRegistry} # ToolRegistry might not be used directly here if ToolRouter handles all.
+  # ToolRegistry might not be used directly here if ToolRouter handles all.
+  alias Thunderline.MCP.{ToolRouter, ToolRegistry}
   alias Thunderline.PAC.Manager
 
-  @type decision_map :: map() # %{action: String.t(), confidence: float(), reasoning: String.t(), ...}
-  @type pac_config_map :: map() # %{pac_id: String.t(), pac_name: String.t(), stats: map(), traits: list(String.t())}
-  @type context_map :: map() # %{zone_context: map(), ...}
+  # %{action: String.t(), confidence: float(), reasoning: String.t(), ...}
+  @type decision_map :: map()
+  # %{pac_id: String.t(), pac_name: String.t(), stats: map(), traits: list(String.t())}
+  @type pac_config_map :: map()
+  # %{zone_context: map(), ...}
+  @type context_map :: map()
   @type available_tools_list :: list(String.t())
   @type action_plan :: map()
   @type execution_outcome :: map()
@@ -22,15 +26,16 @@ defmodule Thunderline.AgentCore.ActionExecutor do
   def run(decision, pac_config, context, available_tools) do
     action = Map.get(decision, :action, "unknown_action")
 
-    with {:ok, plan} <- create_action_plan(action, decision, context, pac_config), # Pass pac_config for richer plans
+    # Pass pac_config for richer plans
+    with {:ok, plan} <- create_action_plan(action, decision, context, pac_config),
          {:ok, outcome} <- execute_action_plan(plan, pac_config, available_tools),
          {:ok, state_updates} <- calculate_state_updates(outcome, pac_config),
          {:ok, _applied_marker} <- apply_state_updates(pac_config.pac_id, state_updates) do
-
-      updated_pac_config = Map.merge(pac_config, %{
-        "stats" => Map.merge(pac_config["stats"] || %{}, state_updates["stats"] || %{}),
-        "state" => Map.merge(pac_config["state"] || %{}, state_updates["state"] || %{})
-      })
+      updated_pac_config =
+        Map.merge(pac_config, %{
+          "stats" => Map.merge(pac_config["stats"] || %{}, state_updates["stats"] || %{}),
+          "state" => Map.merge(pac_config["state"] || %{}, state_updates["state"] || %{})
+        })
 
       metadata = %{
         timestamp: DateTime.utc_now(),
@@ -38,12 +43,15 @@ defmodule Thunderline.AgentCore.ActionExecutor do
         raw_outcome: outcome,
         state_changes_applied: state_updates
       }
+
       {:ok, {updated_pac_config, outcome, metadata}}
     else
       {:error, reason} ->
         Logger.error("ActionExecutor run failed: #{inspect(reason)}")
         {:error, reason}
-      err -> # Catch any other unexpected errors
+
+      # Catch any other unexpected errors
+      err ->
         Logger.error("ActionExecutor unexpected error: #{inspect(err)}")
         {:error, {:unexpected_executor_error, err}}
     end
@@ -57,14 +65,18 @@ defmodule Thunderline.AgentCore.ActionExecutor do
       base_plan = %{
         action: action,
         type: classify_action_type(action),
-        parameters: extract_action_parameters(action, decision), # decision might contain specific params for an action
+        # decision might contain specific params for an action
+        parameters: extract_action_parameters(action, decision),
         required_tools: determine_required_tools(action),
         estimated_duration: estimate_duration(action),
-        prerequisites: prerequisites # result of check_prerequisites
+        # result of check_prerequisites
+        prerequisites: prerequisites
       }
+
       {:ok, base_plan}
     else
-      {:error, reason} -> {:error, reason} # Pass along error from check_prerequisites
+      # Pass along error from check_prerequisites
+      {:error, reason} -> {:error, reason}
     end
   end
 
@@ -76,16 +88,18 @@ defmodule Thunderline.AgentCore.ActionExecutor do
       action in ["explore", "move"] -> :movement
       action in ["create", "build", "write"] -> :creative
       action in ["learn", "study", "analyze"] -> :intellectual
-      String.starts_with?(action, "work_on_goal") -> :goal_pursuit # Match prefix for specific goals
+      # Match prefix for specific goals
+      String.starts_with?(action, "work_on_goal") -> :goal_pursuit
       true -> :general
     end
   end
-  defp classify_action_type(_), do: :unknown
 
+  defp classify_action_type(_), do: :unknown
 
   defp extract_action_parameters(action, decision) do
     base_params = %{
-      action: action, # The core action string
+      # The core action string
+      action: action,
       # Fields from decision that might be useful for any action
       confidence: Map.get(decision, :confidence),
       reasoning: Map.get(decision, :reasoning),
@@ -100,28 +114,33 @@ defmodule Thunderline.AgentCore.ActionExecutor do
     cond do
       String.starts_with?(action, "use_") ->
         tool_name = String.trim_leading(action, "use_")
-        Map.put(base_params, :tool_name, tool_name) # Changed from :tool to :tool_name for clarity
-        # Potentially extract tool-specific params if decision map contains them under a key, e.g., decision.tool_params
+        # Changed from :tool to :tool_name for clarity
+        Map.put(base_params, :tool_name, tool_name)
+
+      # Potentially extract tool-specific params if decision map contains them under a key, e.g., decision.tool_params
       String.starts_with?(action, "work_on_goal") ->
-         # Example: if decision has a :goal_details map
+        # Example: if decision has a :goal_details map
         goal_details = Map.get(decision, :goal_details, %{})
-        Map.merge(base_params, goal_details) # Merges goal_id, description etc.
+        # Merges goal_id, description etc.
+        Map.merge(base_params, goal_details)
+
       true ->
         base_params
     end
   end
 
-
   defp determine_required_tools(action) when is_binary(action) do
     cond do
       String.starts_with?(action, "use_") -> [String.trim_leading(action, "use_")]
-      action == "explore" -> ["movement", "observation"] # Assuming these are abstract tools/capabilities
+      # Assuming these are abstract tools/capabilities
+      action == "explore" -> ["movement", "observation"]
       action == "create" -> ["creative_tools"]
       action == "learn" -> ["learning_tools"]
       action == "socialize" -> ["communication"]
       true -> []
     end
   end
+
   defp determine_required_tools(_), do: []
 
   defp estimate_duration(action) when is_binary(action) do
@@ -137,6 +156,7 @@ defmodule Thunderline.AgentCore.ActionExecutor do
       true -> 3
     end
   end
+
   defp estimate_duration(_), do: 3
 
   # Added pac_config for potentially checking agent's own state/stats as prerequisite
@@ -146,7 +166,8 @@ defmodule Thunderline.AgentCore.ActionExecutor do
       case action do
         "socialize" ->
           if (context.zone_context["pac_count"] || 0) > 1 do
-            [] # Assuming pac_count includes self, so > 1 means others are present
+            # Assuming pac_count includes self, so > 1 means others are present
+            []
           else
             ["no_other_pacs_available"]
           end
@@ -161,13 +182,14 @@ defmodule Thunderline.AgentCore.ActionExecutor do
         "rest" ->
           if Map.get(pac_config.stats, "energy", 100) < 80, do: [], else: ["not_tired_enough"]
 
-
         _ ->
-          [] # Default: no prerequisites or handled by tool/action itself
+          # Default: no prerequisites or handled by tool/action itself
+          []
       end
-    {:ok, prereqs} # Return in a tuple
-  end
 
+    # Return in a tuple
+    {:ok, prereqs}
+  end
 
   # Action Execution
 
@@ -175,23 +197,44 @@ defmodule Thunderline.AgentCore.ActionExecutor do
     case plan.prerequisites do
       [] ->
         do_execute_action(plan, pac_config, available_tools)
+
       prerequisites ->
-        Logger.info("Action #{plan.action} cannot be executed due to unmet prerequisites: #{inspect prerequisites} for #{pac_config.pac_name}")
+        Logger.info(
+          "Action #{plan.action} cannot be executed due to unmet prerequisites: #{inspect(prerequisites)} for #{pac_config.pac_name}"
+        )
+
         {:error, {:prerequisites_not_met, prerequisites}}
     end
   end
 
   defp do_execute_action(plan, pac_config, available_tools) do
     Logger.debug("Executing action: #{plan.action} for PAC #{pac_config.pac_name}")
+
     case plan.type do
-      :tool_usage -> execute_tool_action(plan, pac_config, available_tools)
-      :internal -> execute_internal_action(plan, pac_config)
-      :social -> execute_social_action(plan, pac_config)
-      :movement -> execute_movement_action(plan, pac_config)
-      :creative -> execute_creative_action(plan, pac_config)
-      :intellectual -> execute_intellectual_action(plan, pac_config)
-      :goal_pursuit -> execute_goal_action(plan, pac_config)
-      :general -> execute_general_action(plan, pac_config)
+      :tool_usage ->
+        execute_tool_action(plan, pac_config, available_tools)
+
+      :internal ->
+        execute_internal_action(plan, pac_config)
+
+      :social ->
+        execute_social_action(plan, pac_config)
+
+      :movement ->
+        execute_movement_action(plan, pac_config)
+
+      :creative ->
+        execute_creative_action(plan, pac_config)
+
+      :intellectual ->
+        execute_intellectual_action(plan, pac_config)
+
+      :goal_pursuit ->
+        execute_goal_action(plan, pac_config)
+
+      :general ->
+        execute_general_action(plan, pac_config)
+
       _ ->
         Logger.warning("Unknown action type: #{plan.type} for action #{plan.action}")
         {:error, {:unknown_action_type, plan.type}}
@@ -200,7 +243,8 @@ defmodule Thunderline.AgentCore.ActionExecutor do
 
   # Specific Action Executors
   defp execute_tool_action(plan, pac_config, available_tools) do
-    tool_name = Map.get(plan.parameters, :tool_name, "") # From extract_action_parameters
+    # From extract_action_parameters
+    tool_name = Map.get(plan.parameters, :tool_name, "")
 
     if tool_name in available_tools do
       execution_context = %{
@@ -211,26 +255,50 @@ defmodule Thunderline.AgentCore.ActionExecutor do
       }
 
       # Tool inputs should be specific, not just dropping generic fields
-      tool_inputs = Map.get(plan.parameters, :tool_inputs, Map.drop(plan.parameters, [:action, :confidence, :reasoning, :expected_outcome, :tool_name]))
+      tool_inputs =
+        Map.get(
+          plan.parameters,
+          :tool_inputs,
+          Map.drop(plan.parameters, [
+            :action,
+            :confidence,
+            :reasoning,
+            :expected_outcome,
+            :tool_name
+          ])
+        )
 
       case ToolRouter.execute_tool(tool_name, tool_inputs, execution_context) do
         {:ok, result} ->
-          {:ok, %{
-            type: :tool_success, # Standardized outcome structure
-            action: plan.action,
-            tool_used: tool_name,
-            result: result, # Tool specific result
-            energy_cost: calculate_tool_energy_cost(tool_name, tool_inputs)
-          }}
-        {:error, error_type, message} when error_type in [:tool_not_found, :invalid_input, :execution_failed] ->
-           Logger.error("Tool execution failed for #{tool_name}: #{error_type} - #{inspect(message)}")
+          {:ok,
+           %{
+             # Standardized outcome structure
+             type: :tool_success,
+             action: plan.action,
+             tool_used: tool_name,
+             # Tool specific result
+             result: result,
+             energy_cost: calculate_tool_energy_cost(tool_name, tool_inputs)
+           }}
+
+        {:error, error_type, message}
+        when error_type in [:tool_not_found, :invalid_input, :execution_failed] ->
+          Logger.error(
+            "Tool execution failed for #{tool_name}: #{error_type} - #{inspect(message)}"
+          )
+
           {:error, {error_type, tool_name, message}}
-        {:error, reason} -> # Catch other tool errors
+
+        # Catch other tool errors
+        {:error, reason} ->
           Logger.error("Tool execution generic error for #{tool_name}: #{inspect(reason)}")
           {:error, {:tool_execution_failed, tool_name, reason}}
       end
     else
-      Logger.warning("Tool #{tool_name} not available for #{pac_config.pac_name}. Available: #{inspect available_tools}")
+      Logger.warning(
+        "Tool #{tool_name} not available for #{pac_config.pac_name}. Available: #{inspect(available_tools)}"
+      )
+
       {:error, {:tool_not_available, tool_name}}
     end
   end
@@ -238,49 +306,136 @@ defmodule Thunderline.AgentCore.ActionExecutor do
   defp execute_internal_action(plan, pac_config) do
     case plan.action do
       "rest" ->
-        {:ok, %{type: :rest, action: plan.action, energy_gained: 30, mood_effect: "refreshed", description: "#{pac_config.pac_name} took time to rest and recharge"}}
+        {:ok,
+         %{
+           type: :rest,
+           action: plan.action,
+           energy_gained: 30,
+           mood_effect: "refreshed",
+           description: "#{pac_config.pac_name} took time to rest and recharge"
+         }}
+
       "reflect" ->
-        {:ok, %{type: :reflection, action: plan.action, energy_cost: 5, intelligence_gain: 2, mood_effect: "contemplative", description: "#{pac_config.pac_name} engaged in deep reflection", insights: generate_reflection_insights(pac_config)}}
-      _ -> {:error, {:unknown_internal_action, plan.action}}
+        {:ok,
+         %{
+           type: :reflection,
+           action: plan.action,
+           energy_cost: 5,
+           intelligence_gain: 2,
+           mood_effect: "contemplative",
+           description: "#{pac_config.pac_name} engaged in deep reflection",
+           insights: generate_reflection_insights(pac_config)
+         }}
+
+      _ ->
+        {:error, {:unknown_internal_action, plan.action}}
     end
   end
 
   defp execute_social_action(plan, pac_config) do
     case plan.action do
       "socialize" ->
-        {:ok, %{type: :social_interaction, action: plan.action, energy_cost: 10, social_gain: 15, mood_effect: "social", description: "#{pac_config.pac_name} engaged in social interaction", interaction_type: "casual_conversation"}}
-      "communicate" -> # Example of another social action
-        {:ok, %{type: :communication, action: plan.action, energy_cost: 5, social_gain: 5, mood_effect: "connected", description: "#{pac_config.pac_name} communicated with another agent.", message_content: Map.get(plan.parameters, :message, "Hello!") }}
-      _ -> {:error, {:unknown_social_action, plan.action}}
+        {:ok,
+         %{
+           type: :social_interaction,
+           action: plan.action,
+           energy_cost: 10,
+           social_gain: 15,
+           mood_effect: "social",
+           description: "#{pac_config.pac_name} engaged in social interaction",
+           interaction_type: "casual_conversation"
+         }}
+
+      # Example of another social action
+      "communicate" ->
+        {:ok,
+         %{
+           type: :communication,
+           action: plan.action,
+           energy_cost: 5,
+           social_gain: 5,
+           mood_effect: "connected",
+           description: "#{pac_config.pac_name} communicated with another agent.",
+           message_content: Map.get(plan.parameters, :message, "Hello!")
+         }}
+
+      _ ->
+        {:error, {:unknown_social_action, plan.action}}
     end
   end
 
   defp execute_movement_action(plan, pac_config) do
     case plan.action do
       "explore" ->
-        {:ok, %{type: :exploration, action: plan.action, energy_cost: 15, curiosity_satisfaction: 20, mood_effect: "adventurous", description: "#{pac_config.pac_name} explored their environment", discoveries: generate_exploration_discoveries(pac_config)}}
-      "move" -> # Example of another movement action
+        {:ok,
+         %{
+           type: :exploration,
+           action: plan.action,
+           energy_cost: 15,
+           curiosity_satisfaction: 20,
+           mood_effect: "adventurous",
+           description: "#{pac_config.pac_name} explored their environment",
+           discoveries: generate_exploration_discoveries(pac_config)
+         }}
+
+      # Example of another movement action
+      "move" ->
         target_location = Map.get(plan.parameters, :target_location, "nearby area")
-        {:ok, %{type: :movement, action: plan.action, energy_cost: 10, description: "#{pac_config.pac_name} moved to #{target_location}."}}
-      _ -> {:error, {:unknown_movement_action, plan.action}}
+
+        {:ok,
+         %{
+           type: :movement,
+           action: plan.action,
+           energy_cost: 10,
+           description: "#{pac_config.pac_name} moved to #{target_location}."
+         }}
+
+      _ ->
+        {:error, {:unknown_movement_action, plan.action}}
     end
   end
 
   defp execute_creative_action(plan, pac_config) do
     case plan.action do
-      action when action in ["create", "build", "write"] -> # Group similar creative actions
+      # Group similar creative actions
+      action when action in ["create", "build", "write"] ->
         creation = generate_creative_output(pac_config)
-        {:ok, %{type: :creation, action: plan.action, energy_cost: 20, creativity_satisfaction: 25, mood_effect: "fulfilled", description: "#{pac_config.pac_name} engaged in creative work: #{plan.action}", creation: creation}}
-      _ -> {:error, {:unknown_creative_action, plan.action}}
+
+        {:ok,
+         %{
+           type: :creation,
+           action: plan.action,
+           energy_cost: 20,
+           creativity_satisfaction: 25,
+           mood_effect: "fulfilled",
+           description: "#{pac_config.pac_name} engaged in creative work: #{plan.action}",
+           creation: creation
+         }}
+
+      _ ->
+        {:error, {:unknown_creative_action, plan.action}}
     end
   end
 
   defp execute_intellectual_action(plan, pac_config) do
     case plan.action do
-      action when action in ["learn", "study", "analyze"] -> # Group similar intellectual actions
+      # Group similar intellectual actions
+      action when action in ["learn", "study", "analyze"] ->
         learning = generate_learning_outcome(pac_config)
-        {:ok, %{type: :learning, action: plan.action, energy_cost: 15, intelligence_gain: 10, mood_effect: "satisfied", description: "#{pac_config.pac_name} engaged in learning: #{plan.action}", learning: learning}}
-      _ -> {:error, {:unknown_intellectual_action, plan.action}}
+
+        {:ok,
+         %{
+           type: :learning,
+           action: plan.action,
+           energy_cost: 15,
+           intelligence_gain: 10,
+           mood_effect: "satisfied",
+           description: "#{pac_config.pac_name} engaged in learning: #{plan.action}",
+           learning: learning
+         }}
+
+      _ ->
+        {:error, {:unknown_intellectual_action, plan.action}}
     end
   end
 
@@ -289,11 +444,28 @@ defmodule Thunderline.AgentCore.ActionExecutor do
     goal_id = Map.get(plan.parameters, :goal_id, "unknown_goal")
     goal_desc = Map.get(plan.parameters, :goal_description, "an unspecified goal")
     progress_made = Enum.random(10..30)
-    {:ok, %{type: :goal_progress, action: plan.action, energy_cost: 18, goal_id: goal_id, goal_description: goal_desc, progress_made: progress_made, mood_effect: "determined", description: "#{pac_config.pac_name} made progress on goal: #{goal_desc}"}}
+
+    {:ok,
+     %{
+       type: :goal_progress,
+       action: plan.action,
+       energy_cost: 18,
+       goal_id: goal_id,
+       goal_description: goal_desc,
+       progress_made: progress_made,
+       mood_effect: "determined",
+       description: "#{pac_config.pac_name} made progress on goal: #{goal_desc}"
+     }}
   end
 
   defp execute_general_action(plan, pac_config) do
-    {:ok, %{type: :general, action: plan.action, energy_cost: 10, description: "#{pac_config.pac_name} performed general action: #{plan.action}"}}
+    {:ok,
+     %{
+       type: :general,
+       action: plan.action,
+       energy_cost: 10,
+       description: "#{pac_config.pac_name} performed general action: #{plan.action}"
+     }}
   end
 
   # State Updates
@@ -303,7 +475,8 @@ defmodule Thunderline.AgentCore.ActionExecutor do
     current_state = Map.get(pac_config, "state", %{})
 
     # Start with existing stats and state, override with changes
-    updated_stats = Map.get(current_stats, "energy", 100) # Default to 100 if not present
+    # Default to 100 if not present
+    updated_stats = Map.get(current_stats, "energy", 100)
 
     updated_stats =
       cond do
@@ -313,37 +486,41 @@ defmodule Thunderline.AgentCore.ActionExecutor do
       end
 
     new_stats_map = Map.put(current_stats, "energy", updated_stats)
-    new_stats_map = apply_stat_gains(new_stats_map, execution_outcome, current_stats) # Pass current_stats for baseline
+    # Pass current_stats for baseline
+    new_stats_map = apply_stat_gains(new_stats_map, execution_outcome, current_stats)
 
-    new_state_map = Map.merge(current_state, %{
-      "activity" => execution_outcome.type || current_state["activity"] || "idle",
-      "mood" => execution_outcome.mood_effect || current_state["mood"] || "neutral"
-    })
+    new_state_map =
+      Map.merge(current_state, %{
+        "activity" => execution_outcome.type || current_state["activity"] || "idle",
+        "mood" => execution_outcome.mood_effect || current_state["mood"] || "neutral"
+      })
 
     # Record last action performed
     new_state_map = Map.put(new_state_map, "last_action", execution_outcome.action)
     new_state_map = Map.put(new_state_map, "last_action_outcome", execution_outcome.type)
 
-
     final_updates = %{
       "stats" => new_stats_map,
       "state" => new_state_map
     }
+
     {:ok, final_updates}
   end
-
 
   defp apply_stat_gains(stats_updates_map, execution_outcome, current_stats_baseline) do
     gains = [
       {:intelligence_gain, "intelligence"},
-      {:creativity_gain, "creativity"}, # Assuming this is the key in outcome
+      # Assuming this is the key in outcome
+      {:creativity_gain, "creativity"},
       {:social_gain, "social"},
-      {:curiosity_satisfaction, "curiosity"} # Assuming this is the key
+      # Assuming this is the key
+      {:curiosity_satisfaction, "curiosity"}
     ]
 
     Enum.reduce(gains, stats_updates_map, fn {gain_key, stat_name}, acc ->
       if gain_value = execution_outcome[gain_key] do
-        current_value = Map.get(current_stats_baseline, stat_name, 50) # Use baseline for current value
+        # Use baseline for current value
+        current_value = Map.get(current_stats_baseline, stat_name, 50)
         new_value = min(100, current_value + gain_value)
         Map.put(acc, stat_name, new_value)
       else
@@ -357,18 +534,23 @@ defmodule Thunderline.AgentCore.ActionExecutor do
     # Use PAC manager to apply updates to the actual PAC record
     case Manager.update_pac_state(pac_id, updates) do
       {:ok, _updated_pac} ->
-        Logger.debug("State updates applied for PAC ID #{pac_id}: #{inspect updates}")
+        Logger.debug("State updates applied for PAC ID #{pac_id}: #{inspect(updates)}")
         {:ok, :applied}
+
       {:error, reason} ->
-        Logger.error("Failed to apply state updates for PAC ID #{pac_id}: #{inspect reason}")
+        Logger.error("Failed to apply state updates for PAC ID #{pac_id}: #{inspect(reason)}")
         {:error, reason}
     end
   end
 
   # Generation Functions (Simplified stubs, can be expanded)
 
-  defp generate_reflection_insights(_pac_config), do: Enum.take_random(["Realized a pattern.", "Considered alternatives."], 1)
-  defp generate_exploration_discoveries(_pac_config), do: Enum.take_random(["Found a new path.", "Saw something interesting."], 1)
+  defp generate_reflection_insights(_pac_config),
+    do: Enum.take_random(["Realized a pattern.", "Considered alternatives."], 1)
+
+  defp generate_exploration_discoveries(_pac_config),
+    do: Enum.take_random(["Found a new path.", "Saw something interesting."], 1)
+
   defp generate_creative_output(_pac_config), do: "Generated a novel idea."
   defp generate_learning_outcome(_pac_config), do: "Understood a new concept."
 
@@ -383,11 +565,14 @@ defmodule Thunderline.AgentCore.ActionExecutor do
         |> Enum.reduce(0, fn
           val, acc when is_binary(val) -> acc + div(String.length(val), 100)
           val, acc when is_list(val) -> acc + length(val)
-          _, acc -> acc + 1 # Minimal cost for other types
+          # Minimal cost for other types
+          _, acc -> acc + 1
         end)
       else
-        0 # No inputs or not a map
+        # No inputs or not a map
+        0
       end
+
     max(base_cost + complexity_modifier, 1)
   end
 end

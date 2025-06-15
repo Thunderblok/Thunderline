@@ -21,8 +21,8 @@ defmodule Thunderline.Integration.MemoryBasicTest do
       agent_id = UUID.uuid4()
 
       # Test basic memory storage
-      {:ok, memory_node} = MemoryManager.store(agent_id, "Test memory content",
-                                              tags: ["test", "integration"])
+      {:ok, memory_node} =
+        MemoryManager.store(agent_id, "Test memory content", tags: ["test", "integration"])
 
       assert memory_node != nil
       assert memory_node.agent_id == agent_id
@@ -41,12 +41,16 @@ defmodule Thunderline.Integration.MemoryBasicTest do
       agent_id = UUID.uuid4()
 
       # Store multiple memories
-      {:ok, _mem1} = MemoryManager.store(agent_id, "I love creative projects",
-                                        tags: ["creativity", "passion"])
-      {:ok, _mem2} = MemoryManager.store(agent_id, "Problem solving is fun",
-                                        tags: ["analysis", "enjoyment"])
-      {:ok, _mem3} = MemoryManager.store(agent_id, "Exploring new ideas excites me",
-                                        tags: ["exploration", "curiosity"])
+      {:ok, _mem1} =
+        MemoryManager.store(agent_id, "I love creative projects", tags: ["creativity", "passion"])
+
+      {:ok, _mem2} =
+        MemoryManager.store(agent_id, "Problem solving is fun", tags: ["analysis", "enjoyment"])
+
+      {:ok, _mem3} =
+        MemoryManager.store(agent_id, "Exploring new ideas excites me",
+          tags: ["exploration", "curiosity"]
+        )
 
       # Test search
       {:ok, search_results} = MemoryManager.search(agent_id, "creative", limit: 5)
@@ -54,9 +58,10 @@ defmodule Thunderline.Integration.MemoryBasicTest do
       assert length(search_results) > 0
 
       # Find the creativity-related memory
-      creative_memory = Enum.find(search_results, fn memory ->
-        String.contains?(memory.content, "creative")
-      end)
+      creative_memory =
+        Enum.find(search_results, fn memory ->
+          String.contains?(memory.content, "creative")
+        end)
 
       assert creative_memory != nil
 
@@ -85,7 +90,8 @@ defmodule Thunderline.Integration.MemoryBasicTest do
 
       assert is_binary(narrative)
       assert String.contains?(narrative, "TestAgent")
-      assert String.length(narrative) > 10  # Should be a meaningful narrative
+      # Should be a meaningful narrative
+      assert String.length(narrative) > 10
 
       IO.puts("✅ Narrative generation working!")
       IO.puts("   - Generated narrative: #{narrative}")
@@ -97,8 +103,10 @@ defmodule Thunderline.Integration.MemoryBasicTest do
 
       # Store a memory
       start_time = System.monotonic_time(:millisecond)
-      {:ok, _memory} = MemoryManager.store(agent_id, "Performance test memory",
-                                          tags: ["performance"])
+
+      {:ok, _memory} =
+        MemoryManager.store(agent_id, "Performance test memory", tags: ["performance"])
+
       store_time = System.monotonic_time(:millisecond) - start_time
 
       # Search for memories
@@ -122,8 +130,10 @@ defmodule Thunderline.Integration.MemoryBasicTest do
       agent_id = UUID.uuid4()
 
       # Store some agent memories
-      {:ok, _mem1} = MemoryManager.store(agent_id, "Previous successful exploration",
-                                        tags: ["exploration", "success"])
+      {:ok, _mem1} =
+        MemoryManager.store(agent_id, "Previous successful exploration",
+          tags: ["exploration", "success"]
+        )
 
       # Generate a narrative about the agent
       context = %{
@@ -136,19 +146,21 @@ defmodule Thunderline.Integration.MemoryBasicTest do
       {:ok, narrative} = Engine.generate_tick_narrative(context)
 
       # Store the narrative as a memory
-      {:ok, narrative_memory} = MemoryManager.store(agent_id, narrative,
-                                                   tags: ["narrative", "tick_result"])
+      {:ok, narrative_memory} =
+        MemoryManager.store(agent_id, narrative, tags: ["narrative", "tick_result"])
 
       # Search for both types of memories
       {:ok, all_memories} = MemoryManager.search(agent_id, "", limit: 20)
 
-      exploration_memories = Enum.filter(all_memories, fn memory ->
-        "exploration" in memory.tags
-      end)
+      exploration_memories =
+        Enum.filter(all_memories, fn memory ->
+          "exploration" in memory.tags
+        end)
 
-      narrative_memories = Enum.filter(all_memories, fn memory ->
-        "narrative" in memory.tags
-      end)
+      narrative_memories =
+        Enum.filter(all_memories, fn memory ->
+          "narrative" in memory.tags
+        end)
 
       assert length(exploration_memories) > 0
       assert length(narrative_memories) > 0
@@ -170,6 +182,7 @@ defmodule Thunderline.Integration.MemoryBasicTest do
       case result do
         {:ok, _memory} ->
           IO.puts("✅ Memory manager handles nil agent ID")
+
         {:error, reason} ->
           IO.puts("✅ Memory manager fails gracefully with nil agent ID: #{inspect(reason)}")
       end
@@ -187,6 +200,7 @@ defmodule Thunderline.Integration.MemoryBasicTest do
         {:ok, memory} ->
           assert memory.content == ""
           IO.puts("✅ Memory manager stores empty content")
+
         {:error, reason} ->
           IO.puts("✅ Memory manager rejects empty content: #{inspect(reason)}")
       end

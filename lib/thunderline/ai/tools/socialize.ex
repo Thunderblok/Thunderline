@@ -8,13 +8,15 @@ defmodule Thunderline.AI.Tools.Socialize do
 
   attributes do
     uuid_primary_key :id
-    attribute :interaction_type, :string # "casual", "deep", "collaborative"
+    # "casual", "deep", "collaborative"
+    attribute :interaction_type, :string
     attribute :target_ids, {:array, :string}, default: []
     attribute :topic, :string
     attribute :mood_impact, :integer, default: 0
     attribute :relationship_changes, :map, default: %{}
     timestamps()
   end
+
   actions do
     defaults [:read, :destroy]
 
@@ -25,8 +27,10 @@ defmodule Thunderline.AI.Tools.Socialize do
     action :socialize, :struct do
       description "Interact socially with other agents or entities"
 
-      argument :interaction_type, :string, default: "casual" # "casual", "deep", "collaborative"
-      argument :target_type, :string, default: "nearby" # "nearby", "specific", "broadcast"
+      # "casual", "deep", "collaborative"
+      argument :interaction_type, :string, default: "casual"
+      # "nearby", "specific", "broadcast"
+      argument :target_type, :string, default: "nearby"
       argument :topic, :string, default: "general"
 
       run fn input, _context ->
@@ -35,21 +39,23 @@ defmodule Thunderline.AI.Tools.Socialize do
         target_type = input.arguments.target_type
         topic = input.arguments.topic
 
-        quality_score = case interaction_type do
-          "deep" -> 8
-          "collaborative" -> 7
-          "casual" -> 5
-          _ -> 3
-        end
+        quality_score =
+          case interaction_type do
+            "deep" -> 8
+            "collaborative" -> 7
+            "casual" -> 5
+            _ -> 3
+          end
 
-        {:ok, %{
-          participants: ["agent_nearby_1"],
-          interaction_quality: quality_score,
-          mood_impact: round(quality_score * 0.5),
-          relationship_changes: %{"agent_nearby_1" => 1},
-          result_message: "Had a #{interaction_type} #{topic} conversation with nearby agents",
-          new_information: ["Local weather is improving"]
-        }}
+        {:ok,
+         %{
+           participants: ["agent_nearby_1"],
+           interaction_quality: quality_score,
+           mood_impact: round(quality_score * 0.5),
+           relationship_changes: %{"agent_nearby_1" => 1},
+           result_message: "Had a #{interaction_type} #{topic} conversation with nearby agents",
+           new_information: ["Local weather is improving"]
+         }}
       end
     end
   end

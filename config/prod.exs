@@ -23,9 +23,10 @@ config :thunderline, Oban,
   repo: Thunderline.Repo,
   plugins: [
     Oban.Plugins.Pruner,
-    {Oban.Plugins.Cron, crontab: [
-      {"*/30 * * * *", Thunderline.Tick.TickWorker}
-    ]}
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"*/30 * * * *", Thunderline.Tick.TickWorker}
+     ]}
   ],
   queues: [
     tick: 10,
