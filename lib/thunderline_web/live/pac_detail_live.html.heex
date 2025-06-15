@@ -1,7 +1,19 @@
 <div class="font-mono text-gray-300 bg-black p-6 min-h-screen">
-  <h1 class="text-3xl mb-6 text-cyan-400">Agent Detail: <span class="text-lime-400"><%= @pac.name %></span></h1>
+  <h1 class="text-3xl mb-6 text-cyan-400"><%= @page_title %></h1>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div :if={@loading} class="flex justify-center items-center h-64">
+    <p class="text-xl text-lime-400 animate-pulse">Loading PAC Details...</p>
+  </div>
+
+  <div :if={!@loading and is_nil(@pac)} class="flex flex-col items-center justify-center h-64">
+    <p class="text-2xl text-red-500 mb-4">PAC Not Found</p>
+    <p class="text-gray-400">The requested PAC with ID <span class="font-semibold text-yellow-400"><%= @pac_id %></span> could not be loaded or does not exist.</p>
+    <.link href={~p"/dashboard"} class="mt-6 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors">
+      Return to Dashboard
+    </.link>
+  </div>
+
+  <div :if={!@loading and @pac} class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <!-- Left Column: Animated Glyph & Traits -->
     <div class="md:col-span-1 space-y-6">
       <div id="animated-glyph" class="border border-green-500 p-4 h-48 flex items-center justify-center rounded-md bg-slate-900 shadow-inner">
@@ -80,20 +92,33 @@
           </details>
         </div>
       </div>
+
+      <div id="last-zone-interaction" class="border border-green-500 p-4 rounded-md bg-slate-900">
+        <h2 class="text-xl mb-3 text-lime-400">Last Zone Interaction</h2>
+        <div :if={@pac.last_tick_result} class="text-sm text-gray-400 space-y-1">
+          <p>Type: <span class="text-sky-300"><%= @pac.last_tick_result["interaction_type"] || "N/A" %></span></p>
+          <p>Zone ID: <span class="text-cyan-300"><%= @pac.last_tick_result["zone_id"] || "N/A" %></span></p>
+          <p>Target ID: <span class="text-cyan-300"><%= @pac.last_tick_result["target_id"] || "N/A" %></span></p>
+          <p>Outcome: <span class="text-yellow-300"><%= @pac.last_tick_result["outcome"] || "N/A" %></span></p>
+          <details class="mt-2 text-xs cursor-pointer">
+            <summary class="hover:text-lime-300">Show Full Result Details</summary>
+            <pre class="bg-slate-950 text-gray-500 p-2 mt-1 rounded-sm overflow-auto max-h-40 border border-slate-700 shadow-inner"><%= inspect @pac.last_tick_result, pretty: true, limit: :infinity %></pre>
+          </details>
+        </div>
+        <p :if={is_nil(@pac.last_tick_result)} class="text-gray-500 italic">No zone interaction data from last tick.</p>
+      </div>
     </div>
 
     <!-- Right Column: Tick Logs -->
     <div class="md:col-span-1 border border-green-500 p-4 rounded-md bg-slate-900 max-h-[calc(100vh-4rem)] overflow-y-auto">
       <h2 class="text-xl mb-3 text-lime-400 sticky top-0 bg-slate-900 py-2 z-10">Tick Log Timeline</h2>
       <ul class="space-y-3 text-sm">
-        <.each :let={log} id={"log-#{log.id}"} items={@tick_logs}>
-          <li class="border-b border-slate-700 pb-3 mb-3 bg-slate-800/30 p-2 rounded-sm shadow">
-            <div class="flex justify-between items-center mb-1">
-              <span class="font-semibold text-cyan-400">Tick #<%= log.tick_number %></span>
-              <span class="text-xs text-gray-500" title={log.inserted_at}><%= Timex.format!(log.inserted_at, "{relative}", :relative) %></span>
-            </div>
-            <p class="text-gray-300 leading-relaxed"><%= log.data["decision_summary"] || "No decision summary." %></p>
-          </li>
+        <.each :let={log} id={"log-item-" <> log.id} items={@tick_logs}>
+          <.live_component
+            module={ThunderlineWeb.Components.TickHistoryItem}
+            id={"tick-item-" <> log.id}
+            tick_log={log}
+          />
         </.each>
         <p :if={Enum.empty?(@tick_logs)} class="text-gray-500 italic">No tick logs found for this agent.</p>
       </ul>

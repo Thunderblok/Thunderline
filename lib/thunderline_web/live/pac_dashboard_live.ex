@@ -5,17 +5,47 @@ defmodule ThunderlineWeb.PacDashboardLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    socket =
+      assign(socket,
+        loading: true,
+        pacs: [],
+        zone_events: %{},
+        zone_data_unavailable: false,
+        selected_pac_id_for_dev_panel: nil,
+        selected_pac_for_dev_panel: nil
+      )
+
     if connected?(socket) do
       Phoenix.PubSub.subscribe(PubSub, "agents:updates")
+      Phoenix.PubSub.subscribe(Thunderline.PubSub, "zone:all")
+      Process.send_after(self(), :check_zone_data, 5000) # Check after 5 seconds
     end
 
     pacs = Agent.list_active()
+
+    if connected?(socket) do
+      for pac <- pacs do
+        Phoenix.PubSub.subscribe(Thunderline.PubSub, "agent:" <> pac.id)
+      end
+    end
+
     {:ok,
      assign(socket,
        pacs: pacs,
-       selected_pac_id_for_dev_panel: nil,
-       selected_pac_for_dev_panel: nil
-     ), temporary_assigns: [pacs: [], selected_pac_for_dev_panel: nil]}
+       loading: false
+     ), temporary_assigns: [pacs: [], selected_pac_for_dev_panel: nil]} # zone_events is not temporary
+  end
+
+  @impl true
+  def handle_info(:check_zone_data, socket) do
+    if Enum.empty?(socket.assigns.zone_events) do
+      {:noreply, assign(socket, :zone_data_unavailable, true)}
+    else
+      # Zone data has arrived, no need to set the flag, or could explicitly set to false
+      # depending on desired behavior if it can become unavailable again.
+      # For now, once data is seen, we assume it's generally available.
+      {:noreply, assign(socket, :zone_data_unavailable, false)} # Or just {:noreply, socket}
+    end
   end
 
   @impl true
@@ -23,7 +53,8 @@ defmodule ThunderlineWeb.PacDashboardLive do
     updated_pacs =
       Enum.map(socket.assigns.pacs, fn pac ->
         if pac.id == updated_pac_data.id do
-          Map.merge(pac, updated_pac_data)
+          Process.send_after(self(), {:clear_pulse, pac.id}, 300) # Pulse for 300ms
+          Map.merge(pac, Map.merge(updated_pac_data, %{just_updated: true}))
         else
           pac
         end
@@ -128,6 +159,50 @@ defmodule ThunderlineWeb.PacDashboardLive do
     {:noreply, socket_with_flash}
   end
 
+  # Handle zone updates
+  # Expected payload: %{zone_id: String.t(), event: map()}
+  @impl true
+  def handle_info({:tock, %{zone_id: id, event: evt}}, socket) do
+    updated_zone_events = Map.put(socket.assigns.zone_events, id, evt)
+    {:noreply, assign(socket, :zone_events, updated_zone_events)}
+  end
+
+  # Handle agent updates
+  # Expected payload: %{agent: map(), result: map()}
+  # agent map should contain at least :id (and other fields of the PAC resource)
+  # result map contains the outcome of the tick
+  @impl true
+  def handle_info({:tick_update, %{agent: agent_data, result: res}}, socket) do
+    # Create a map with the agent data and the result
+    # Assuming agent_data is a map and res should be part of this map or processed accordingly
+    updated_agent_info = Map.merge(agent_data, %{last_tick_result: res})
+
+    updated_pacs =
+      Enum.map(socket.assigns.pacs, fn pac ->
+        if pac.id == agent_data.id do
+          Process.send_after(self(), {:clear_pulse, pac.id}, 300) # Pulse for 300ms
+          # Merge the new information into the existing PAC data, add last_tick_result and just_updated
+          Map.merge(pac, Map.merge(updated_agent_info, %{just_updated: true}))
+        else
+          pac
+        end
+      end)
+    {:noreply, assign(socket, :pacs, updated_pacs)}
+  end
+
+  @impl true
+  def handle_info({:clear_pulse, pac_id}, socket) do
+    updated_pacs =
+      Enum.map(socket.assigns.pacs, fn pac ->
+        if pac.id == pac_id do
+          Map.put(pac, :just_updated, false)
+        else
+          pac
+        end
+      end)
+    {:noreply, assign(socket, :pacs, updated_pacs)}
+  end
+
   @impl true
   def render(assigns) do
     # This render function is automatically called by LiveView
@@ -141,5 +216,35 @@ defmodule ThunderlineWeb.PacDashboardLive do
     # For clarity, we ensure it's here if we were to add specific logic.
     # Since we rely on `pac_dashboard_live.html.heex`, this is sufficient.
     assigns
+  end
+
+  def pac_card_classes(pac, zone_events) do
+    base_classes = "rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 ease-in-out p-4 block" # New base classes from prompt
+
+    highlight_class =
+      if pac_zone_id = pac.zone_id do # Assuming pac.zone_id is the correct field for current zone
+        # Check if there's any event for the PAC's current zone
+        if Map.has_key?(zone_events, pac_zone_id) do
+          " zone-highlight" # Add leading space for class concatenation
+        else
+          ""
+        end
+      else
+        "" # No zone_id for the PAC, so no highlight
+      end
+
+    pulse_class = if pac.just_updated, do: " pulse-animation", else: "" # Add leading space if used
+
+    # Ensure proper spacing when concatenating classes
+    # Trim to avoid leading/trailing spaces if some classes are empty, then join.
+    # However, simple concatenation with leading spaces on conditional classes is often fine.
+    # Let's adjust to ensure no double spacing if a class is empty.
+    # A more robust way is to build a list and join.
+    classes = [
+      base_classes,
+      String.trim(highlight_class), # remove leading space if present, then let join handle it
+      String.trim(pulse_class)      # remove leading space if present
+    ]
+    Enum.reject(classes, &(&1 == "")) |> Enum.join(" ")
   end
 end

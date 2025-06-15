@@ -18,6 +18,7 @@ defmodule Thunderline.PAC.Zone do
 
   alias Thunderline.PAC.Agent
 
+
   postgres do
     table "pac_zones"
     repo Thunderline.Repo
@@ -27,6 +28,7 @@ defmodule Thunderline.PAC.Zone do
       index [:properties], using: "gin"
     end
   end
+
 
   json_api do
     type "pac_zone"
@@ -92,11 +94,13 @@ defmodule Thunderline.PAC.Zone do
     timestamps()
   end
 
+
   relationships do
     has_many :agents, Agent do
       destination_attribute :zone_id
     end
   end
+
 
   actions do
     defaults [:read, :destroy]
@@ -147,6 +151,7 @@ defmodule Thunderline.PAC.Zone do
     end
   end
 
+
   calculations do
     calculate :agent_count, :integer do
       calculation fn records, _context ->
@@ -174,20 +179,30 @@ defmodule Thunderline.PAC.Zone do
     end
   end
 
+
   validations do
     validate compare(:size, greater_than: 0, message: "Size must be positive")
     validate compare(:max_agents, greater_than: 0, message: "Max agents must be positive")
   end
+
+
   code_interface do
     domain Thunderline.Domain
 
     define :create, args: [:name]
+
     define :get_by_id, action: :read, get_by: [:id]
+
     define :get_by_name, action: :read, get_by: [:name]
+
     define :update
+
     define :tick
+
     define :with_agents
+
     define :available_for_spawning
+
     define :list_all, action: :read
   end
 end
